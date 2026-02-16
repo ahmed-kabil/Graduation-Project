@@ -42,21 +42,25 @@ const VitalsCard: React.FC<{ vital: VitalSign }> = ({ vital }) => {
 };
 
 const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const getUnit = (name: string) => {
-      if (name === 'Respiration Rate') return 'breaths/min';
-      if (name === 'SpO2') return '%';
-      return '';
-    };
-
+  if (active && payload && payload.length > 0) {
+    // Get the actual data point from the payload
+    const dataPoint = payload[0].payload;
+    
     return (
       <div className="bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200">
-        <p className="label text-sm font-bold text-slate-800 mb-1">{`Time: ${label}`}</p>
-        {payload.map((p: any, index: number) => (
-          <p key={index} style={{ color: p.stroke }} className="text-sm font-medium">
-            {`${p.name}: ${p.value.toFixed(1)} ${getUnit(p.name)}`}
-          </p>
-        ))}
+        <p className="label text-sm font-bold text-slate-800 mb-1">{`Time: ${dataPoint.time || label}`}</p>
+        <p style={{ color: '#ef4444' }} className="text-sm font-medium">
+          {`Heart Rate: ${dataPoint.heartRate?.toFixed(1) || '0.0'} BPM`}
+        </p>
+        <p style={{ color: '#f59e0b' }} className="text-sm font-medium">
+          {`Temperature: ${dataPoint.temperature?.toFixed(1) || '0.0'} °C`}
+        </p>
+        <p style={{ color: '#3b82f6' }} className="text-sm font-medium">
+          {`Respiration Rate: ${dataPoint.respirationRate?.toFixed(1) || '0.0'} breaths/min`}
+        </p>
+        <p style={{ color: '#10b981' }} className="text-sm font-medium">
+          {`SpO2: ${dataPoint.spo2?.toFixed(1) || '0.0'} %`}
+        </p>
       </div>
     );
   }
@@ -73,6 +77,15 @@ export const PatientDetailView: React.FC<{ patient: Patient; onBack: () => void;
         return () => window.removeEventListener('resize', handleResize);
     }, []);
     const chartData: Record<VitalSign['name'], VitalHistoryPoint[]> = history;
+    
+    // Merge all vitals data by time for synchronized tooltip display
+    const mergedChartData = chartData['Heart Rate']?.map((point, index) => ({
+        time: point.time,
+        heartRate: chartData['Heart Rate'][index]?.value || 0,
+        temperature: chartData['Temperature'][index]?.value || 0,
+        respirationRate: chartData['Respiration Rate'][index]?.value || 0,
+        spo2: chartData['SpO2'][index]?.value || 0,
+    })) || [];
 
     return (
         <div className="space-y-6">
@@ -114,15 +127,23 @@ export const PatientDetailView: React.FC<{ patient: Patient; onBack: () => void;
                 {vitals.map(v => <VitalsCard key={v.name} vital={v} />)}
             </div>
             <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md">
-                <h3 className="text-xl font-semibold text-slate-800 mb-4">Vitals History (Last 30 mins)</h3>
+                <h3 className="text-xl font-semibold text-slate-800 mb-4">Vitals History (Last 20 Readings)</h3>
                  <ResponsiveContainer width="100%" height={350}>
-                    <AreaChart data={chartData['Respiration Rate']} margin={isMobile ? { top: 5, right: 5, left: -25, bottom: 0 } : { top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <AreaChart data={mergedChartData} margin={isMobile ? { top: 5, right: 5, left: -25, bottom: 0 } : { top: 5, right: 20, left: -10, bottom: 5 }}>
                         <defs>
-                            <linearGradient id="colorRespirationRate" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="colorHeartRate2" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                            </linearGradient>
+                            <linearGradient id="colorTemperature2" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                            </linearGradient>
+                            <linearGradient id="colorRespirationRate2" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
                                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                             </linearGradient>
-                            <linearGradient id="colorSpO2" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="colorSpO22" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
                                 <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                             </linearGradient>
@@ -134,13 +155,16 @@ export const PatientDetailView: React.FC<{ patient: Patient; onBack: () => void;
                             tick={{ fontSize: isMobile ? 10 : 12, fill: 'currentColor' }} 
                             className="text-slate-600"
                             tickLine={false}
+                            interval={isMobile ? 'preserveEnd' : 'preserveStartEnd'}
                         />
-                        <YAxis yAxisId="left" stroke="#3b82f6" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fontSize: isMobile ? 10 : 12 }} />
+                        <YAxis yAxisId="left" stroke="#64748b" domain={['dataMin - 5', 'dataMax + 5']} tick={{ fontSize: isMobile ? 10 : 12 }} />
                         <YAxis yAxisId="right" orientation="right" stroke="#10b981" domain={[90, 100]} tick={{ fontSize: isMobile ? 10 : 12 }} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} animationDuration={200} isAnimationActive={false} />
                         {!isMobile && <Legend wrapperStyle={{ color: 'var(--text-color)' }} />}
-                        <Area yAxisId="left" type="monotone" dataKey="value" name="Respiration Rate" stroke="#3b82f6" fillOpacity={1} fill="url(#colorRespirationRate)" strokeWidth={2} isAnimationActive={true} />
-                        <Area yAxisId="right" type="monotone" data={chartData['SpO2']} dataKey="value" name="SpO2" stroke="#10b981" fillOpacity={1} fill="url(#colorSpO2)" strokeWidth={2} isAnimationActive={true} />
+                        <Area yAxisId="left" type="monotone" dataKey="heartRate" name="Heart Rate" stroke="#ef4444" fillOpacity={1} fill="url(#colorHeartRate2)" strokeWidth={2} activeDot={{ r: 6 }} dot={false} connectNulls />
+                        <Area yAxisId="left" type="monotone" dataKey="temperature" name="Temperature" stroke="#f59e0b" fillOpacity={1} fill="url(#colorTemperature2)" strokeWidth={2} activeDot={{ r: 6 }} dot={false} connectNulls />
+                        <Area yAxisId="left" type="monotone" dataKey="respirationRate" name="Respiration Rate" stroke="#3b82f6" fillOpacity={1} fill="url(#colorRespirationRate2)" strokeWidth={2} activeDot={{ r: 6 }} dot={false} connectNulls />
+                        <Area yAxisId="right" type="monotone" dataKey="spo2" name="SpO2" stroke="#10b981" fillOpacity={1} fill="url(#colorSpO22)" strokeWidth={2} activeDot={{ r: 6 }} dot={false} connectNulls />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>

@@ -35,22 +35,58 @@ module.exports = (io) => {
         }
 
         // Save message to DB
-        await Message.create(data);
+        const savedMsg = await Message.create(data);
 
+        // Determine patient and doctor IDs
+        const patientId = data.patient_id || data.conversation_id.replace('conv_', '');
+        const doctorId = data.doctor_id || (data.sender_id === patientId ? data.receiver_id : data.sender_id);
+        const patientName = data.patient_name || patientId;
+
+        // Upsert conversation — creates if it doesn't exist
         await Conversation.findOneAndUpdate(
           { conversation_id: data.conversation_id },
           {
-            last_message: data.message,
-            updated_at: Date.now(),
-          }
+            $set: {
+              last_message: data.message,
+              updated_at: Date.now(),
+            },
+            $setOnInsert: {
+              conversation_id: data.conversation_id,
+              doctor_id: doctorId,
+              patient_id: patientId,
+              patient_name: patientName,
+            },
+          },
+          { upsert: true, new: true }
         );
 
-        // Emit to all users in the room
-        io.to(data.conversation_id).emit("receiveMessage", data);
+        // Emit to all users in the room (include _id and timestamp from saved message)
+        const emitData = {
+          ...data,
+          _id: savedMsg._id.toString(),
+          timestamp: savedMsg.timestamp,
+          read: savedMsg.read,
+        };
+        io.to(data.conversation_id).emit("receiveMessage", emitData);
 
       } catch (err) {
         console.error("❌ Error in sendMessage:", err);
         socket.emit("errorMessage", { error: "Message could not be sent" });
+      }
+    });
+
+    // Handle new appointment notification
+    socket.on("newAppointment", (data) => {
+      console.log("📅 New appointment notification:", data);
+      
+      // Broadcast to the specific doctor if they are online
+      if (data.doctorId && onlineUsers[data.doctorId]) {
+        io.to(onlineUsers[data.doctorId]).emit("newAppointment", data);
+        console.log("✅ Appointment notification sent to doctor:", data.doctorId);
+      } else {
+        // Broadcast to all connected clients (fallback)
+        io.emit("newAppointment", data);
+        console.log("📢 Appointment notification broadcasted to all");
       }
     });
 

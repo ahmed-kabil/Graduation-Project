@@ -4,7 +4,7 @@
 # 🛑 إعدادات الحساب والإصدار 🛑
 # ==========================================
 DOCKER_USER="monabawi" 
-VERSION="v3"
+VERSION="v4.0"
 
 echo "🚀 Starting deployment process for user: $DOCKER_USER (Version: $VERSION)..."
 

@@ -88,6 +88,7 @@ export const GlobalVitalsMonitor: React.FC = () => {
             }
         };
 
+        checkAllVitals(); // Run immediately on mount
         const intervalId = setInterval(checkAllVitals, 5000);
         return () => clearInterval(intervalId);
 

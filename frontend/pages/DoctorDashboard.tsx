@@ -8,6 +8,8 @@ import { PatientDetailView } from '../components/PatientDetailView';
 import { appointmentService } from '../services/appointmentService';
 import { useNotification } from '../context/NotificationContext';
 import { useAlert } from '../context/AlertContext';
+import { socketService, SocketMessage } from '../services/socketService';
+import { chatService } from '../services/chatService';
 
 // Icons
 const PatientListIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
@@ -16,7 +18,7 @@ const MessageIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" hei
 const AppointmentIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>;
 const SendIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>;
 
-const MessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
+const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = ({ doctor, initialPatientId }) => {
   type ConversationSummary = { patient: Patient, lastMessage: DoctorPatientMessage, unreadCount: number };
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -37,17 +39,90 @@ const MessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
     await fetchConversations(); 
   }, [doctor.id, fetchConversations]);
 
+  // Initialize socket connection and event handlers
+  useEffect(() => {
+    // Connect to socket
+    socketService.connect();
+    
+    // Mark doctor as online
+    socketService.goOnline(doctor.id);
+
+    // Handle incoming messages
+    const handleIncomingMessage = (socketMsg: SocketMessage) => {
+      console.log('Received message via socket:', socketMsg);
+      
+      // Convert socket message to DoctorPatientMessage format
+      const newMessage: DoctorPatientMessage = {
+        id: socketMsg._id || `msg-${Date.now()}`,
+        senderId: socketMsg.sender_id,
+        receiverId: socketMsg.receiver_id,
+        text: socketMsg.message,
+        timestamp: new Date(socketMsg.timestamp || new Date()),
+        read: socketMsg.read || false,
+      };
+
+      // Update messages if this message is for the current conversation
+      if (selectedPatient) {
+        const patientId = selectedPatient.id;
+        const isRelevantMessage = 
+          (socketMsg.sender_id === patientId && socketMsg.receiver_id === doctor.id) ||
+          (socketMsg.sender_id === doctor.id && socketMsg.receiver_id === patientId);
+        
+        if (isRelevantMessage) {
+          setMessages(prev => {
+            // Avoid duplicates
+            if (prev.some(m => m.id === newMessage.id)) {
+              return prev;
+            }
+            return [...prev, newMessage].sort((a, b) => 
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            );
+          });
+
+          // Mark as read if message is from patient to doctor
+          if (socketMsg.sender_id === patientId) {
+            const conversationId = chatService.getConversationId(patientId);
+            chatService.markMessagesAsRead({
+              conversation_id: conversationId,
+              user_id: doctor.id,
+            });
+          }
+        }
+      }
+
+      // Refresh conversations to update last message and unread counts
+      fetchConversations();
+    };
+
+    socketService.onMessage(handleIncomingMessage);
+
+    // Cleanup on unmount
+    return () => {
+      socketService.offMessage(handleIncomingMessage);
+    };
+  }, [doctor.id, selectedPatient, fetchConversations]);
+
+  // Fetch conversations on mount
   useEffect(() => {
     fetchConversations();
-    const intervalId = setInterval(fetchConversations, 5000);
-    return () => clearInterval(intervalId);
   }, [fetchConversations]);
 
+  // Auto-select patient if initialPatientId is provided
+  useEffect(() => {
+    if (initialPatientId && conversations.length > 0 && !selectedPatient) {
+      const patient = conversations.find(c => c.patient.id === initialPatientId)?.patient;
+      if (patient) {
+        setSelectedPatient(patient);
+      }
+    }
+  }, [initialPatientId, conversations, selectedPatient]);
+
+  // Join conversation when patient is selected and fetch messages
   useEffect(() => {
     if (selectedPatient) {
+      const conversationId = chatService.getConversationId(selectedPatient.id);
+      socketService.joinConversation(conversationId);
       fetchMessages(selectedPatient.id);
-      const intervalId = setInterval(() => fetchMessages(selectedPatient.id), 3000);
-      return () => clearInterval(intervalId);
     }
   }, [selectedPatient, fetchMessages]);
 
@@ -62,10 +137,34 @@ const MessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
   const handleSend = async () => {
     if (!input.trim() || !selectedPatient || isLoading) return;
     setIsLoading(true);
+    
+    const messageText = input.trim();
     setInput('');
-    await api.sendMessage(doctor.id, selectedPatient.id, input.trim());
-    await fetchMessages(selectedPatient.id);
-    setIsLoading(false);
+
+    const conversationId = chatService.getConversationId(selectedPatient.id);
+    
+    try {
+      // Send message via socket (which also saves to DB)
+      const socketMessage: SocketMessage = {
+        conversation_id: conversationId,
+        sender_id: doctor.id,
+        receiver_id: selectedPatient.id,
+        message: messageText,
+        patient_name: selectedPatient.name,
+        doctor_id: doctor.id,
+        patient_id: selectedPatient.id,
+      };
+      
+      socketService.sendMessage(socketMessage);
+      
+      // Note: The message will be added to the UI when we receive it back via 'receiveMessage' event
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Restore input on error
+      setInput(messageText);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   // Mobile chat view uses absolute positioning for smooth slide transitions
@@ -135,24 +234,54 @@ export const DoctorDashboard: React.FC = () => {
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [conversations, setConversations] = useState<{patient: Patient, lastMessage: DoctorPatientMessage, unreadCount: number}[]>([]);
     const [newAppointmentCount, setNewAppointmentCount] = useState(0);
-    const lastSeenAppointmentCountRef = useRef(0);
+    const [autoSelectPatientId, setAutoSelectPatientId] = useState<string | undefined>(undefined);
     const { addToast } = useNotification();
-    const { alerts } = useAlert();
+    const { alerts, unreadCount, markAllRead, dismissAlert, isAlertRead } = useAlert();
     const notifiedMessagesRef = useRef<Set<string>>(new Set());
     
     const doctor = user as Doctor;
     
     const doctorAlerts = alerts.filter(alert => doctor.patients.includes(alert.patientId));
+    const doctorUnreadCount = doctorAlerts.filter(a => !isAlertRead(a.id)).length;
+
+    // Real-time appointment notifications using Socket.io
+    useEffect(() => {
+        // Connect to socket
+        socketService.connect();
+        
+        // Mark doctor as online so backend knows which socket to send notifications to
+        socketService.goOnline(doctor.id);
+        
+        // Listen for new appointment events
+        const handleNewAppointment = (data: any) => {
+            console.log('📅 New appointment notification received:', data);
+            
+            // Only increment if not on Appointments tab
+            if (activeTab !== 'Appointments') {
+                setNewAppointmentCount(prev => prev + 1);
+                addToast(
+                    `New appointment from ${data.patientName || 'a patient'}!`,
+                    'info',
+                    () => {
+                        setActiveTab('Appointments');
+                        setSelectedPatient(null);
+                        setNewAppointmentCount(0);
+                    }
+                );
+            }
+        };
+        
+        socketService.on('newAppointment', handleNewAppointment);
+        
+        // Cleanup
+        return () => {
+            socketService.off('newAppointment', handleNewAppointment);
+        };
+    }, [activeTab, addToast, doctor.id]);
 
     useEffect(() => {
         api.getDoctorPatients(doctor.id).then(fetchedPatients => {
             setPatients(fetchedPatients);
-
-            // Initialize the last-seen count on first load
-            const patientIds = fetchedPatients.map(p => p.id);
-            appointmentService.getAppointmentsForDoctor(patientIds).then(appointments => {
-                lastSeenAppointmentCountRef.current = appointments.length;
-            });
         });
 
         const fetchConvos = async () => {
@@ -162,7 +291,15 @@ export const DoctorDashboard: React.FC = () => {
             convos.forEach(convo => {
                 if (convo.unreadCount > 0 && convo.lastMessage.senderId !== doctor.id && !notifiedMessagesRef.current.has(convo.lastMessage.id)) {
                     const shortMessage = convo.lastMessage.text.length > 40 ? `${convo.lastMessage.text.substring(0, 40)}...` : convo.lastMessage.text;
-                    addToast(`New message from ${convo.patient.name}: "${shortMessage}"`);
+                    addToast(
+                        `New message from ${convo.patient.name}: "${shortMessage}"`,
+                        'info',
+                        () => {
+                            setActiveTab('Messages');
+                            setAutoSelectPatientId(convo.patient.id);
+                            setSelectedPatient(null);
+                        }
+                    );
                     notifiedMessagesRef.current.add(convo.lastMessage.id);
                 }
             });
@@ -171,27 +308,6 @@ export const DoctorDashboard: React.FC = () => {
         const intervalId = setInterval(fetchConvos, 5000);
         return () => clearInterval(intervalId);
     }, [doctor.id, addToast]);
-
-    // Poll for new appointments
-    useEffect(() => {
-        if (patients.length === 0) return;
-        const patientIds = patients.map(p => p.id);
-
-        const checkNewAppointments = async () => {
-            const appointments = await appointmentService.getAppointmentsForDoctor(patientIds);
-            const currentCount = appointments.length;
-            const diff = currentCount - lastSeenAppointmentCountRef.current;
-
-            if (diff > 0 && activeTab !== 'Appointments') {
-                setNewAppointmentCount(prev => prev + diff);
-                addToast(`You have ${diff} new appointment${diff > 1 ? 's' : ''}!`);
-            }
-            lastSeenAppointmentCountRef.current = currentCount;
-        };
-
-        const intervalId = setInterval(checkNewAppointments, 5000);
-        return () => clearInterval(intervalId);
-    }, [patients, activeTab, addToast]);
 
     const handleSelectPatientFromAppointment = (patientId: string) => {
         const patient = patients.find(p => p.id === patientId);
@@ -207,7 +323,7 @@ export const DoctorDashboard: React.FC = () => {
         { name: 'Patients', icon: <PatientListIcon />, onClick: () => { setActiveTab('Patients'); setSelectedPatient(null); } },
         { name: 'Appointments', icon: <div className="relative"><AppointmentIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${newAppointmentCount > 0 ? 'opacity-100' : 'opacity-0'}`}>{newAppointmentCount}</span></div>, onClick: () => { setActiveTab('Appointments'); setSelectedPatient(null); setNewAppointmentCount(0); } },
         { name: 'Messages', icon: <div className="relative"><MessageIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${totalUnread > 0 ? 'opacity-100' : 'opacity-0'}`}>{totalUnread}</span></div>, onClick: () => { setActiveTab('Messages'); setSelectedPatient(null); } },
-        { name: 'Alerts', icon: <div className="relative"><AlertIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${doctorAlerts.length > 0 ? 'opacity-100' : 'opacity-0'}`}>{doctorAlerts.length}</span></div>, onClick: () => { setActiveTab('Alerts'); setSelectedPatient(null); } }
+        { name: 'Alerts', icon: <div className="relative"><AlertIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${doctorUnreadCount > 0 ? 'opacity-100' : 'opacity-0'}`}>{doctorUnreadCount}</span></div>, onClick: () => { setActiveTab('Alerts'); setSelectedPatient(null); markAllRead(); } }
     ];
 
     const renderPatientList = () => (
@@ -233,10 +349,15 @@ export const DoctorDashboard: React.FC = () => {
             <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto">
                 {doctorAlerts.length === 0 ? <p className="text-slate-500">No active alerts for your patients.</p> :
                  doctorAlerts.map(a => (
-                    <div key={a.id} className="p-4 rounded-lg bg-red-50 border border-red-200">
-                        <p className="font-bold text-red-700">{a.message}</p>
-                        <p className="text-sm text-red-600">Patient: {a.patientName} | Value: {a.value}</p>
-                        <p className="text-xs text-slate-500 mt-1">{a.timestamp.toLocaleString()}</p>
+                    <div key={a.id} className="p-4 rounded-lg bg-red-50 border border-red-200 flex items-start justify-between">
+                        <div>
+                            <p className="font-bold text-red-700">{a.message}</p>
+                            <p className="text-sm text-red-600">Patient: {a.patientName} | Value: {a.value}</p>
+                            <p className="text-xs text-slate-500 mt-1">{a.timestamp.toLocaleString()}</p>
+                        </div>
+                        <button onClick={() => dismissAlert(a.id)} className="ml-3 flex-shrink-0 p-1 rounded-full text-red-400 hover:text-red-700 hover:bg-red-100 transition" aria-label="Dismiss alert">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                     </div>
                 ))}
             </div>
@@ -245,7 +366,7 @@ export const DoctorDashboard: React.FC = () => {
 
     const renderContent = () => {
         if (activeTab === 'Appointments') return <DoctorAppointmentsView doctor={doctor} onSelectPatient={handleSelectPatientFromAppointment} />;
-        if (activeTab === 'Messages') return <MessagingView doctor={doctor} />;
+        if (activeTab === 'Messages') return <MessagingView doctor={doctor} initialPatientId={autoSelectPatientId} />;
         if (activeTab === 'Alerts') return renderAlerts();
 
         if (selectedPatient) {
@@ -254,22 +375,8 @@ export const DoctorDashboard: React.FC = () => {
         return renderPatientList();
     };
 
-    // Simulate new appointments with a button
-    const simulateNewAppointment = () => {
-        setNewAppointmentCount(count => count + 1);
-    };
-
     return (
         <Layout sidebarItems={sidebarItems} activeItem={selectedPatient ? 'Patients' : activeTab}>
-            {/* Simulate new appointment button for demo/testing */}
-            <div className="flex justify-end mb-4">
-                <button
-                    onClick={simulateNewAppointment}
-                    className="bg-sky-500 text-white px-4 py-2 rounded-full shadow hover:bg-sky-600 transition font-semibold"
-                >
-                    Simulate New Appointment
-                </button>
-            </div>
             {renderContent()}
         </Layout>
     );

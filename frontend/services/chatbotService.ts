@@ -1,7 +1,8 @@
 // Medical ChatBot Service - Backend API Integration
 // Replaces the legacy Gemini client-side implementation with server-side RAG-based chatbot
 
-const CHATBOT_API_URL = '/api/chatbot';
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+const CHATBOT_API_URL = backendUrl !== undefined ? `${backendUrl}/api/chatbot` : '/api/chatbot';
 
 export const getChatbotResponse = async (message: string): Promise<string> => {
   try {

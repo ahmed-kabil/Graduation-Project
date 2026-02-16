@@ -4,6 +4,10 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { AlertProvider } from './context/AlertContext';
+import { initMobileApp } from './services/mobileInit';
+
+// Initialize mobile features (no-op on web)
+initMobileApp();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

@@ -5,7 +5,7 @@ const Conversation = require("../models/conversations-model");
  * Send a message (stores in DB)
  */
 const sendMessage = async (req, res) => {
-  const { conversation_id, sender_id, receiver_id, message } = req.body;
+  const { conversation_id, sender_id, receiver_id, message, patient_name, doctor_id, patient_id } = req.body;
   try {
     let newMsg = await new Message({
       conversation_id: conversation_id,
@@ -16,13 +16,27 @@ const sendMessage = async (req, res) => {
 
     await newMsg.save();
     
-    // Update last_message in conversation
+    // Determine patient and doctor IDs for conversation upsert
+    const derivedPatientId = patient_id || conversation_id.replace('conv_', '');
+    const derivedDoctorId = doctor_id || (sender_id === derivedPatientId ? receiver_id : sender_id);
+    const derivedPatientName = patient_name || derivedPatientId;
+
+    // Upsert conversation — creates if it doesn't exist
     await Conversation.findOneAndUpdate(
       { conversation_id: conversation_id },
       {
-        last_message: message,
-        updated_at: Date.now(),
-      }
+        $set: {
+          last_message: message,
+          updated_at: Date.now(),
+        },
+        $setOnInsert: {
+          conversation_id: conversation_id,
+          doctor_id: derivedDoctorId,
+          patient_id: derivedPatientId,
+          patient_name: derivedPatientName,
+        },
+      },
+      { upsert: true, new: true }
     );
 
     res.json({ status: "success", data: newMsg });

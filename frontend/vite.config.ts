@@ -9,6 +9,13 @@ export default defineConfig(({ mode }) => {
         port: 3000,
         host: '0.0.0.0',
       },
+      build: {
+        outDir: 'dist',
+        assetsDir: 'assets',
+        // Ensure all assets use relative paths for Capacitor
+        assetsInlineLimit: 0,
+      },
+      base: '',  // Use relative paths so Capacitor can load from file://
       plugins: [react()],
       resolve: {
         alias: {

@@ -10,7 +10,7 @@ services:
   # Container 1: API Gateway (Nginx)
   # ==========================================
   nginx:
-    image: monabawi/hospital-gateway:v3
+    image: monabawi/hospital-gateway:v4.0
     container_name: hospital-gateway
     ports:
       - "80:80"
@@ -30,7 +30,7 @@ services:
   # Container 2: Frontend (React + Vite)
   # ==========================================
   frontend:
-    image: monabawi/hospital-frontend:v3
+    image: monabawi/hospital-frontend:v4.0
     # To rebuild locally with production URLs, uncomment below and comment out image:
     # build:
     #   context: ./frontend
@@ -47,7 +47,7 @@ services:
   # Handles: Login, Registration, Token Verification
   # ==========================================
   auth-service:
-    image: monabawi/hospital-auth-service:v3
+    image: monabawi/hospital-auth-service:v4.0
     container_name: hospital-auth-service
     expose:
       - "4001"
@@ -66,7 +66,7 @@ services:
   # Handles: Staff CRUD, Patients CRUD, Doctor-specific endpoints
   # ==========================================
   core-service:
-    image: monabawi/hospital-core-service:v3
+    image: monabawi/hospital-core-service:v4.0
     container_name: hospital-core-service
     expose:
       - "4002"
@@ -85,7 +85,7 @@ services:
   # Handles: Sensor Readings from Medical Devices
   # ==========================================
   iot-service:
-    image: monabawi/hospital-iot-service:v3
+    image: monabawi/hospital-iot-service:v4.0
     container_name: hospital-iot-service
     expose:
       - "4003"
@@ -104,7 +104,7 @@ services:
   # Handles: Real-time Messaging, Conversations
   # ==========================================
   chat-service:
-    image: monabawi/hospital-chat-service:v3
+    image: monabawi/hospital-chat-service:v4.0
     container_name: hospital-chat-service
     expose:
       - "4004"
@@ -123,7 +123,7 @@ services:
   # Handles: RAG-based Medical Assistant using Pinecone & Groq
   # ==========================================
   medical-chatbot:
-    image: monabawi/hospital-medical-chatbot:v3
+    image: monabawi/hospital-medical-chatbot:v4.0
     container_name: hospital-medical-chatbot
     expose:
       - "9090"

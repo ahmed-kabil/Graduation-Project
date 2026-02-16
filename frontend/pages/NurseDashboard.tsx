@@ -17,7 +17,7 @@ export const NurseDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState('Patients');
     const [patients, setPatients] = useState<Patient[]>([]);
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-    const { alerts } = useAlert();
+    const { alerts, unreadCount, markAllRead, dismissAlert } = useAlert();
     
     const nurse = user as Nurse;
 
@@ -27,7 +27,7 @@ export const NurseDashboard: React.FC = () => {
     
     const sidebarItems = [
         { name: 'Patients', icon: <PatientListIcon />, onClick: () => { setActiveTab('Patients'); setSelectedPatient(null); } },
-        { name: 'Alerts', icon: <div className="relative"><AlertIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${alerts.length > 0 ? 'opacity-100' : 'opacity-0'}`}>{alerts.length}</span></div>, onClick: () => { setActiveTab('Alerts'); setSelectedPatient(null); } }
+        { name: 'Alerts', icon: <div className="relative"><AlertIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${unreadCount > 0 ? 'opacity-100' : 'opacity-0'}`}>{unreadCount}</span></div>, onClick: () => { setActiveTab('Alerts'); setSelectedPatient(null); markAllRead(); } }
     ];
 
     const renderPatientList = () => (
@@ -53,10 +53,15 @@ export const NurseDashboard: React.FC = () => {
             <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto">
                 {alerts.length === 0 ? <p className="text-slate-500">No active alerts.</p> :
                  alerts.map(a => (
-                    <div key={a.id} className="p-4 rounded-lg bg-red-50 border border-red-200">
-                        <p className="font-bold text-red-700">{a.message}</p>
-                        <p className="text-sm text-red-600">Patient: {a.patientName} | Value: {a.value}</p>
-                        <p className="text-xs text-slate-500 mt-1">{a.timestamp.toLocaleString()}</p>
+                    <div key={a.id} className="p-4 rounded-lg bg-red-50 border border-red-200 flex items-start justify-between">
+                        <div>
+                            <p className="font-bold text-red-700">{a.message}</p>
+                            <p className="text-sm text-red-600">Patient: {a.patientName} | Value: {a.value}</p>
+                            <p className="text-xs text-slate-500 mt-1">{a.timestamp.toLocaleString()}</p>
+                        </div>
+                        <button onClick={() => dismissAlert(a.id)} className="ml-3 flex-shrink-0 p-1 rounded-full text-red-400 hover:text-red-700 hover:bg-red-100 transition" aria-label="Dismiss alert">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                     </div>
                 ))}
             </div>

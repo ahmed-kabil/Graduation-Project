@@ -1,16 +1,38 @@
-import React, { createContext, useState, useContext, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useCallback, useEffect } from 'react';
 import { Alert } from '../types';
+
+const SEEN_ALERTS_KEY = 'hospital_seen_alert_ids';
+
+const loadSeenIds = (): Set<string> => {
+  try {
+    const stored = localStorage.getItem(SEEN_ALERTS_KEY);
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch { return new Set(); }
+};
+
+const saveSeenIds = (ids: Set<string>) => {
+  try { localStorage.setItem(SEEN_ALERTS_KEY, JSON.stringify([...ids])); } catch {}
+};
 
 interface AlertContextType {
   alerts: Alert[];
+  unreadCount: number;
   addAlert: (newAlert: Alert) => void;
   removeAlert: (patientId: string, vitalName: Alert['vital']) => void;
+  dismissAlert: (alertId: string) => void;
+  markAllRead: () => void;
+  isAlertRead: (alertId: string) => boolean;
 }
 
 const AlertContext = createContext<AlertContextType | undefined>(undefined);
 
 export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [seenIds, setSeenIds] = useState<Set<string>>(loadSeenIds);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+
+  // Persist seenIds to localStorage whenever it changes
+  useEffect(() => { saveSeenIds(seenIds); }, [seenIds]);
 
   const addAlert = useCallback((newAlert: Alert) => {
     setAlerts(prevAlerts => {
@@ -19,12 +41,10 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       );
 
       if (existingAlertIndex > -1) {
-        // Update existing alert to keep timestamp fresh
         const updatedAlerts = [...prevAlerts];
         updatedAlerts[existingAlertIndex] = newAlert;
         return updatedAlerts;
       }
-      // Add new alert to the top
       return [newAlert, ...prevAlerts];
     });
   }, []);
@@ -33,9 +53,32 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setAlerts(prevAlerts => prevAlerts.filter(a => !(a.patientId === patientId && a.vital === vitalName)));
   }, []);
 
+  // Dismiss a specific alert (user clicks X on an alert card)
+  const dismissAlert = useCallback((alertId: string) => {
+    setDismissedIds(prev => new Set(prev).add(alertId));
+    setSeenIds(prev => { const next = new Set(prev); next.add(alertId); return next; });
+  }, []);
+
+  // Mark all currently visible alerts as read (when opening Alerts tab)
+  const markAllRead = useCallback(() => {
+    setAlerts(current => {
+      setSeenIds(prev => {
+        const next = new Set(prev);
+        current.forEach(a => next.add(a.id));
+        return next;
+      });
+      return current;
+    });
+  }, []);
+
+  // Filter out dismissed alerts for display
+  const visibleAlerts = alerts.filter(a => !dismissedIds.has(a.id));
+  const unreadCount = visibleAlerts.filter(a => !seenIds.has(a.id)).length;
+
+  const isAlertRead = useCallback((alertId: string) => seenIds.has(alertId), [seenIds]);
 
   return (
-    <AlertContext.Provider value={{ alerts, addAlert, removeAlert }}>
+    <AlertContext.Provider value={{ alerts: visibleAlerts, unreadCount, addAlert, removeAlert, dismissAlert, markAllRead, isAlertRead }}>
       {children}
     </AlertContext.Provider>
   );

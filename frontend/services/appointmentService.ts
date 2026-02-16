@@ -1,4 +1,5 @@
 import { Appointment } from '../types';
+import { socketService } from './socketService';
 
 const APPOINTMENTS_KEY = 'hospital_appointments';
 
@@ -69,6 +70,30 @@ export const appointmentService = {
 
             allAppointments.push(newAppointment);
             saveAllAppointments(allAppointments);
+            
+            // Ensure socket is connected and emit real-time notification
+            console.log('💡 Attempting to send appointment notification...');
+            socketService.connect(); // Ensure connection
+            
+            // Use setTimeout to give socket time to connect if needed
+            setTimeout(() => {
+                const socket = socketService.getSocket();
+                if (socket && socketService.isConnected()) {
+                    const notificationData = {
+                        appointmentId: newAppointment.id,
+                        doctorId: newAppointment.doctorId,
+                        patientId: newAppointment.patientId,
+                        patientName: newAppointment.patientName,
+                        date: newAppointment.date,
+                        time: newAppointment.time,
+                    };
+                    socket.emit('newAppointment', notificationData);
+                    console.log('📅 New appointment notification emitted:', notificationData);
+                } else {
+                    console.warn('⚠️ Socket not connected, notification not sent');
+                }
+            }, 500); // Wait 500ms for connection
+            
             resolve(newAppointment);
         });
     },

@@ -8,6 +8,8 @@ import { useVitals } from '../hooks/useVitals';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from 'recharts';
 import { AppointmentScheduler } from '../components/AppointmentScheduler';
 import { useNotification } from '../context/NotificationContext';
+import { socketService, SocketMessage } from '../services/socketService';
+import { chatService } from '../services/chatService';
 
 // Icons
 const VitalsIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>;
@@ -40,21 +42,25 @@ const VitalsCard: React.FC<{ vital: VitalSign }> = ({ vital }) => {
 };
 
 const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const getUnit = (name: string) => {
-      if (name === 'Respiration Rate') return 'breaths/min';
-      if (name === 'SpO2') return '%';
-      return '';
-    };
-
+  if (active && payload && payload.length > 0) {
+    // Get the actual data point from the payload
+    const dataPoint = payload[0].payload;
+    
     return (
       <div className="bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200">
-        <p className="label text-sm font-bold text-slate-800 mb-1">{`Time: ${label}`}</p>
-        {payload.map((p: any, index: number) => (
-          <p key={index} style={{ color: p.stroke }} className="text-sm font-medium">
-            {`${p.name}: ${p.value.toFixed(1)} ${getUnit(p.name)}`}
-          </p>
-        ))}
+        <p className="label text-sm font-bold text-slate-800 mb-1">{`Time: ${dataPoint.time || label}`}</p>
+        <p style={{ color: '#ef4444' }} className="text-sm font-medium">
+          {`Heart Rate: ${dataPoint.heartRate?.toFixed(1) || '0.0'} BPM`}
+        </p>
+        <p style={{ color: '#f59e0b' }} className="text-sm font-medium">
+          {`Temperature: ${dataPoint.temperature?.toFixed(1) || '0.0'} °C`}
+        </p>
+        <p style={{ color: '#3b82f6' }} className="text-sm font-medium">
+          {`Respiration Rate: ${dataPoint.respirationRate?.toFixed(1) || '0.0'} breaths/min`}
+        </p>
+        <p style={{ color: '#10b981' }} className="text-sm font-medium">
+          {`SpO2: ${dataPoint.spo2?.toFixed(1) || '0.0'} %`}
+        </p>
       </div>
     );
   }
@@ -74,6 +80,15 @@ const VitalsDisplay: React.FC<{patient: Patient}> = ({ patient }) => {
     }, []);
 
     const chartData: Record<VitalSign['name'], VitalHistoryPoint[]> = history;
+    
+    // Merge all vitals data by time for synchronized tooltip display
+    const mergedChartData = chartData['Heart Rate']?.map((point, index) => ({
+        time: point.time,
+        heartRate: chartData['Heart Rate'][index]?.value || 0,
+        temperature: chartData['Temperature'][index]?.value || 0,
+        respirationRate: chartData['Respiration Rate'][index]?.value || 0,
+        spo2: chartData['SpO2'][index]?.value || 0,
+    })) || [];
     
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -101,10 +116,18 @@ const VitalsDisplay: React.FC<{patient: Patient}> = ({ patient }) => {
                 {vitals.map(v => <VitalsCard key={v.name} vital={v}/>)}
             </div>
             <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
-                <h3 className="text-xl font-semibold text-slate-800 mb-4">Vitals History (Last 30 mins)</h3>
+                <h3 className="text-xl font-semibold text-slate-800 mb-4">Vitals History (Last 20 Readings)</h3>
                 <ResponsiveContainer width="100%" height={350}>
-                     <AreaChart data={chartData['Respiration Rate']} margin={isMobile ? { top: 5, right: 5, left: -25, bottom: 0 } : { top: 5, right: 20, left: -10, bottom: 5 }}>
+                     <AreaChart data={mergedChartData} margin={isMobile ? { top: 5, right: 5, left: -25, bottom: 0 } : { top: 5, right: 20, left: -10, bottom: 5 }}>
                         <defs>
+                            <linearGradient id="colorHeartRate" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                            </linearGradient>
+                            <linearGradient id="colorTemperature" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                            </linearGradient>
                             <linearGradient id="colorRespirationRate" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
                                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
@@ -121,13 +144,16 @@ const VitalsDisplay: React.FC<{patient: Patient}> = ({ patient }) => {
                             tick={{ fontSize: isMobile ? 10 : 12, fill: 'currentColor' }} 
                             className="text-slate-600"
                             tickLine={false}
+                            interval={isMobile ? 'preserveEnd' : 'preserveStartEnd'}
                         />
-                        <YAxis yAxisId="left" stroke="#3b82f6" domain={['dataMin - 2', 'dataMax + 2']} tick={{ fontSize: isMobile ? 10 : 12 }} />
+                        <YAxis yAxisId="left" stroke="#64748b" domain={['dataMin - 5', 'dataMax + 5']} tick={{ fontSize: isMobile ? 10 : 12 }} />
                         <YAxis yAxisId="right" orientation="right" stroke="#10b981" domain={[90, 100]} tick={{ fontSize: isMobile ? 10 : 12 }} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} animationDuration={200} isAnimationActive={false} />
                         {!isMobile && <Legend wrapperStyle={{ color: 'var(--text-color)' }} />}
-                        <Area yAxisId="left" type="monotone" dataKey="value" name="Respiration Rate" stroke="#3b82f6" fillOpacity={1} fill="url(#colorRespirationRate)" strokeWidth={2} isAnimationActive={true} />
-                        <Area yAxisId="right" type="monotone" data={chartData['SpO2']} dataKey="value" name="SpO2" stroke="#10b981" fillOpacity={1} fill="url(#colorSpO2)" strokeWidth={2} isAnimationActive={true} />
+                        <Area yAxisId="left" type="monotone" dataKey="heartRate" name="Heart Rate" stroke="#ef4444" fillOpacity={1} fill="url(#colorHeartRate)" strokeWidth={2} activeDot={{ r: 6 }} dot={false} connectNulls />
+                        <Area yAxisId="left" type="monotone" dataKey="temperature" name="Temperature" stroke="#f59e0b" fillOpacity={1} fill="url(#colorTemperature)" strokeWidth={2} activeDot={{ r: 6 }} dot={false} connectNulls />
+                        <Area yAxisId="left" type="monotone" dataKey="respirationRate" name="Respiration Rate" stroke="#3b82f6" fillOpacity={1} fill="url(#colorRespirationRate)" strokeWidth={2} activeDot={{ r: 6 }} dot={false} connectNulls />
+                        <Area yAxisId="right" type="monotone" dataKey="spo2" name="SpO2" stroke="#10b981" fillOpacity={1} fill="url(#colorSpO2)" strokeWidth={2} activeDot={{ r: 6 }} dot={false} connectNulls />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
@@ -227,16 +253,73 @@ const DoctorChatModal: React.FC<{
   const fetchMessages = useCallback(async () => {
     const conversation = await api.getConversation(patient.id, doctor.id);
     setMessages(conversation);
-    await api.markMessagesAsRead(doctor.id, patient.id);
+    await api.markMessagesAsRead(patient.id, patient.id);
   }, [patient.id, doctor.id]);
 
+  // Initialize socket connection and event handlers
   useEffect(() => {
-    if (isOpen) {
-      fetchMessages();
-      const intervalId = setInterval(fetchMessages, 3000); 
-      return () => clearInterval(intervalId);
-    }
-  }, [isOpen, fetchMessages]);
+    if (!isOpen) return;
+
+    // Connect to socket
+    socketService.connect();
+    
+    // Mark patient as online
+    socketService.goOnline(patient.id);
+
+    // Join conversation
+    const conversationId = chatService.getConversationId(patient.id);
+    socketService.joinConversation(conversationId);
+
+    // Fetch initial messages
+    fetchMessages();
+
+    // Handle incoming messages
+    const handleIncomingMessage = (socketMsg: SocketMessage) => {
+      console.log('Patient received message via socket:', socketMsg);
+      
+      // Convert socket message to DoctorPatientMessage format
+      const newMessage: DoctorPatientMessage = {
+        id: socketMsg._id || `msg-${Date.now()}`,
+        senderId: socketMsg.sender_id,
+        receiverId: socketMsg.receiver_id,
+        text: socketMsg.message,
+        timestamp: new Date(socketMsg.timestamp || new Date()),
+        read: socketMsg.read || false,
+      };
+
+      // Check if this message is for the current conversation
+      const isRelevantMessage = 
+        (socketMsg.sender_id === patient.id && socketMsg.receiver_id === doctor.id) ||
+        (socketMsg.sender_id === doctor.id && socketMsg.receiver_id === patient.id);
+      
+      if (isRelevantMessage) {
+        setMessages(prev => {
+          // Avoid duplicates
+          if (prev.some(m => m.id === newMessage.id)) {
+            return prev;
+          }
+          return [...prev, newMessage].sort((a, b) => 
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          );
+        });
+
+        // Mark as read if message is from doctor to patient
+        if (socketMsg.sender_id === doctor.id) {
+          chatService.markMessagesAsRead({
+            conversation_id: conversationId,
+            user_id: patient.id,
+          });
+        }
+      }
+    };
+
+    socketService.onMessage(handleIncomingMessage);
+
+    // Cleanup on close
+    return () => {
+      socketService.offMessage(handleIncomingMessage);
+    };
+  }, [isOpen, patient.id, doctor.id, fetchMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -245,10 +328,34 @@ const DoctorChatModal: React.FC<{
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     setIsLoading(true);
+    
+    const messageText = input.trim();
     setInput('');
-    await api.sendMessage(patient.id, doctor.id, input.trim());
-    await fetchMessages();
-    setIsLoading(false);
+
+    const conversationId = chatService.getConversationId(patient.id);
+    
+    try {
+      // Send message via socket (which also saves to DB)
+      const socketMessage: SocketMessage = {
+        conversation_id: conversationId,
+        sender_id: patient.id,
+        receiver_id: doctor.id,
+        message: messageText,
+        patient_name: patient.name,
+        doctor_id: doctor.id,
+        patient_id: patient.id,
+      };
+      
+      socketService.sendMessage(socketMessage);
+      
+      // Note: The message will be added to the UI when we receive it back via 'receiveMessage' event
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Restore input on error
+      setInput(messageText);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   if (!isOpen) return null;
@@ -300,8 +407,7 @@ const DoctorChatModal: React.FC<{
 };
 
 
-const DoctorInfo: React.FC<{ patient: Patient; doctor: Doctor | null }> = ({ patient, doctor }) => {
-    const [isChatOpen, setIsChatOpen] = useState(false);
+const DoctorInfo: React.FC<{ patient: Patient; doctor: Doctor | null; isChatOpen: boolean; onOpenChat: () => void; onCloseChat: () => void }> = ({ patient, doctor, isChatOpen, onOpenChat, onCloseChat }) => {
 
     if (!doctor) return <div>Loading doctor information...</div>;
 
@@ -319,13 +425,13 @@ const DoctorInfo: React.FC<{ patient: Patient; doctor: Doctor | null }> = ({ pat
                         <p className="text-md text-slate-500 mt-2">Contact: {doctor.contact}</p>
                     </div>
                 </div>
-                <button onClick={() => setIsChatOpen(true)} className="w-full py-3 px-4 font-semibold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                <button onClick={onOpenChat} className="w-full py-3 px-4 font-semibold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                     Contact Doctor
                 </button>
             </div>
             {doctor && <DoctorChatModal 
                 isOpen={isChatOpen} 
-                onClose={() => setIsChatOpen(false)} 
+                onClose={onCloseChat} 
                 patient={patient} 
                 doctor={doctor} 
             />}
@@ -338,6 +444,7 @@ export const PatientDashboard: React.FC = () => {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('Vitals');
     const [doctor, setDoctor] = useState<Doctor | null>(null);
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const patient = user as Patient;
     const { addToast } = useNotification();
     const notifiedMessagesRef = useRef<Set<string>>(new Set());
@@ -356,7 +463,14 @@ export const PatientDashboard: React.FC = () => {
 
                 if (lastMessage && lastMessage.senderId === doctor.id && !lastMessage.read && !notifiedMessagesRef.current.has(lastMessage.id)) {
                      const shortMessage = lastMessage.text.length > 40 ? `${lastMessage.text.substring(0, 40)}...` : lastMessage.text;
-                     addToast(`New message from Dr. ${doctor.name.split(' ').pop()}: "${shortMessage}"`);
+                     addToast(
+                         `New message from Dr. ${doctor.name.split(' ').pop()}: "${shortMessage}"`,
+                         'info',
+                         () => {
+                             setIsChatOpen(true);
+                             setActiveTab('Doctor Info');
+                         }
+                     );
                      notifiedMessagesRef.current.add(lastMessage.id);
                 }
             }
@@ -383,7 +497,7 @@ export const PatientDashboard: React.FC = () => {
             case 'Chatbot':
                 return <Chatbot />;
             case 'Doctor Info':
-                return <DoctorInfo patient={patient} doctor={doctor}/>;
+                return <DoctorInfo patient={patient} doctor={doctor} isChatOpen={isChatOpen} onOpenChat={() => setIsChatOpen(true)} onCloseChat={() => setIsChatOpen(false)} />;
             default:
                 return <VitalsDisplay patient={patient}/>;
         }

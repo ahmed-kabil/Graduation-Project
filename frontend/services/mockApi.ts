@@ -1,6 +1,7 @@
 // src/services/mockApi.ts
 
 import { Role, Doctor, Patient, User, LoggedInUser, DoctorPatientMessage, Nurse, Receptionist, AnalyticsData, VitalSign } from '../types';
+import { chatService, Message } from './chatService';
 
 // Read backend configuration from environment variables.
 // In microservices architecture, all API calls go through the Nginx gateway.
@@ -331,65 +332,125 @@ export const api = {
     return new Promise(resolve => setTimeout(() => resolve(data), 800));
   },
 
-  getConversation: (participant1Id: string, participant2Id: string): Promise<DoctorPatientMessage[]> => {
-    const messages = (JSON.parse(localStorage.getItem('messages') || '[]') as DoctorPatientMessage[]).filter(m =>
-        (m.senderId === participant1Id && m.receiverId === participant2Id) ||
-        (m.senderId === participant2Id && m.receiverId === participant1Id)
-    ).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-    return Promise.resolve(messages);
-  },
-
-  sendMessage: (senderId: string, receiverId: string, text: string): Promise<DoctorPatientMessage> => {
-    const messages = JSON.parse(localStorage.getItem('messages') || '[]') as DoctorPatientMessage[];
-    const newMessage: DoctorPatientMessage = {
-        id: `msg-${Date.now()}`,
-        senderId,
-        receiverId,
-        text,
-        timestamp: new Date(),
-        read: false,
+  /**
+   * Helper function to convert backend Message to frontend DoctorPatientMessage
+   */
+  _convertMessage: (msg: Message): DoctorPatientMessage => {
+    return {
+      id: msg._id,
+      senderId: msg.sender_id,
+      receiverId: msg.receiver_id,
+      text: msg.message,
+      timestamp: new Date(msg.timestamp),
+      read: msg.read,
     };
-    messages.push(newMessage);
-    localStorage.setItem('messages', JSON.stringify(messages));
-    return Promise.resolve(newMessage);
   },
 
+  /**
+   * Get conversation messages between two participants
+   * Uses backend API to fetch messages for the conversation
+   */
+  getConversation: async (participant1Id: string, participant2Id: string): Promise<DoctorPatientMessage[]> => {
+    // The first param is always the patient ID, second is the doctor ID
+    // (see caller sites: getConversation(patientId, doctorId))
+    const patientId = participant1Id;
+    const conversationId = chatService.getConversationId(patientId);
+    
+    try {
+      const messages = await chatService.getConversationMessages(conversationId);
+      return messages.map(api._convertMessage).sort((a, b) => 
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Send a message from sender to receiver
+   * Uses backend API to send message
+   */
+  sendMessage: async (senderId: string, receiverId: string, text: string): Promise<DoctorPatientMessage> => {
+    // Conversation ID is always conv_{patientId}
+    // When patient sends: senderId=patientId. When doctor sends: receiverId=patientId.
+    // Since callers always pass (patient.id, doctor.id, text) or use socket, use senderId as patient by default.
+    const conversationId = chatService.getConversationId(senderId);
+    
+    try {
+      const messageData = {
+        conversation_id: conversationId,
+        sender_id: senderId,
+        receiver_id: receiverId,
+        message: text,
+      };
+      
+      const sentMessage = await chatService.sendMessage(messageData);
+      return api._convertMessage(sentMessage);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get all conversations for a doctor with patients
+   * Uses backend API to fetch doctor's conversations
+   */
   getDoctorConversations: async (doctorId: string): Promise<{ patient: Patient, lastMessage: DoctorPatientMessage, unreadCount: number }[]> => {
-    const messages = JSON.parse(localStorage.getItem('messages') || '[]') as DoctorPatientMessage[];
-    const patients = await api.getAllPatients();
-    const conversations: Record<string, { patient: Patient, lastMessage: DoctorPatientMessage, unreadCount: number }> = {};
-    const doctorMessages = messages.filter(m => m.senderId === doctorId || m.receiverId === doctorId);
-
-    for (const message of doctorMessages) {
-      const patientId = message.senderId === doctorId ? message.receiverId : message.senderId;
-      if (!conversations[patientId] || new Date(conversations[patientId].lastMessage.timestamp).getTime() < new Date(message.timestamp).getTime()) {
-        const patient = patients.find(p => p.id === patientId);
-        if (patient) {
-          conversations[patientId] = { patient, lastMessage: message, unreadCount: 0 };
-        }
-      }
+    try {
+      const conversations = await chatService.getDoctorConversations(doctorId);
+      const patients = await api.getAllPatients();
+      
+      const result = await Promise.all(
+        conversations.map(async (conv) => {
+          const patient = patients.find(p => p.id === conv.patient_id);
+          if (!patient) return null;
+          
+          // Fetch messages for this conversation to count unread
+          const messages = await chatService.getConversationMessages(conv.conversation_id);
+          const unreadCount = chatService.countUnreadMessages(messages, doctorId);
+          
+          const lastMessage: DoctorPatientMessage = {
+            id: conv._id,
+            senderId: conv.patient_id, // Assuming last message was from patient
+            receiverId: doctorId,
+            text: conv.last_message,
+            timestamp: new Date(conv.updated_at),
+            read: unreadCount === 0,
+          };
+          
+          return { patient, lastMessage, unreadCount };
+        })
+      );
+      
+      return result
+        .filter((item): item is { patient: Patient, lastMessage: DoctorPatientMessage, unreadCount: number } => item !== null)
+        .sort((a, b) => new Date(b.lastMessage.timestamp).getTime() - new Date(a.lastMessage.timestamp).getTime());
+    } catch (error) {
+      console.error('Error fetching doctor conversations:', error);
+      return [];
     }
-
-    for (const message of doctorMessages) {
-      if (message.receiverId === doctorId && !message.read) {
-        const patientId = message.senderId;
-        if (conversations[patientId]) {
-          conversations[patientId].unreadCount++;
-        }
-      }
-    }
-
-    return Object.values(conversations).sort((a,b) => new Date(b.lastMessage.timestamp).getTime() - new Date(a.lastMessage.timestamp).getTime());
   },
 
-  markMessagesAsRead: (senderId: string, receiverId: string) => {
-    const messages = (JSON.parse(localStorage.getItem('messages') || '[]') as DoctorPatientMessage[]).map(m => {
-        if (m.senderId === senderId && m.receiverId === receiverId && !m.read) {
-            return { ...m, read: true };
-        }
-        return m;
-    });
-    localStorage.setItem('messages', JSON.stringify(messages));
-    return Promise.resolve(true);
+  /**
+   * Mark messages as read between sender and receiver
+   * Uses backend API to mark messages as read
+   */
+  markMessagesAsRead: async (patientId: string, markingUserId: string): Promise<boolean> => {
+    // patientId determines the conversation, markingUserId is who is reading
+    const conversationId = chatService.getConversationId(patientId);
+    const userId = markingUserId;
+    
+    try {
+      await chatService.markMessagesAsRead({
+        conversation_id: conversationId,
+        user_id: userId,
+      });
+      return true;
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+      return false;
+    }
   },
 };

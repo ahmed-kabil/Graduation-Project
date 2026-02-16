@@ -63,7 +63,7 @@ const authUser = async (req, res) => {
     const token = await JWT.sign(
       { user_id: user.user_id, email: user.email, role: user.role },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "50d" }
+      { expiresIn: "1d" }
     );
     
     res.json({

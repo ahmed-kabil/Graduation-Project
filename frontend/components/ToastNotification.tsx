@@ -24,10 +24,18 @@ const Toast: React.FC<{ toast: ToastMessage; onDismiss: (id: number) => void }> 
 
   const styles = typeStyles[toast.type];
 
+  const handleClick = () => {
+    if (toast.onClick) {
+      toast.onClick();
+      onDismiss(toast.id);
+    }
+  };
+
   return (
     <div
-      className={`relative w-full max-w-sm rounded-lg shadow-2xl flex items-center p-4 ${styles.bg} ${styles.text} animate-toast-in`}
+      className={`pointer-events-auto relative w-full max-w-sm rounded-lg shadow-2xl flex items-center p-4 ${styles.bg} ${styles.text} animate-toast-in ${toast.onClick ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
       role="alert"
+      onClick={handleClick}
     >
         <style>{`
             @keyframes toast-in {
@@ -39,11 +47,11 @@ const Toast: React.FC<{ toast: ToastMessage; onDismiss: (id: number) => void }> 
       <div className="flex-shrink-0 mr-3">{styles.icon}</div>
       <div className="flex-grow text-sm font-medium">{toast.message}</div>
       <button
-        onClick={() => onDismiss(toast.id)}
-        className="ml-4 p-1 rounded-full hover:bg-black/20 focus:outline-none focus:ring-2 focus:ring-white"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDismiss(toast.id); }}
+        className="pointer-events-auto relative z-50 ml-3 flex-shrink-0 p-2 rounded-full hover:bg-black/20 focus:outline-none focus:ring-2 focus:ring-white"
         aria-label="Dismiss"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>

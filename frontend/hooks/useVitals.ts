@@ -36,7 +36,7 @@ export const useVitals = (patient: Patient | null) => {
 
         if (readings && readings.length > 0) {
             // FIX: Get the LATEST reading from the end of the array
-            const latestReading = readings[readings.length - 1].sensors; // <--- MODIFIED HERE
+            const latestReading = readings[0].sensors; // <--- MODIFIED HERE
             // console.log("useVitals: Latest reading's sensors:", latestReading); // Debugging
 
             const newVitals = INITIAL_VITALS.map(vital => {
@@ -53,11 +53,11 @@ export const useVitals = (patient: Patient | null) => {
             };
 
             // Use the original 'readings' array, as it's already oldest to newest.
-            // Slice the last 30 for charting, ensuring they are ordered correctly.
-            const readingsForChart = readings.slice(-30);
+            // Slice the last 20 for charting, ensuring they are ordered correctly.
+            const readingsForChart = readings.slice(-20);
 
             readingsForChart.forEach(reading => {
-                const time = new Date(reading.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const time = new Date(reading.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 Object.keys(reading.sensors).forEach(apiKey => {
                     const vitalName = vitalKeyMap[apiKey];
                     if (vitalName) {
