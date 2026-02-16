@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 from src.helper import download_embeddings
 from langchain_pinecone import PineconeVectorStore
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -9,7 +9,7 @@ from langchain.memory import ConversationBufferWindowMemory
 from dotenv import load_dotenv
 from src.prompt import *
 import os
-from pinecone import Pinecone  # هذا هو الاستيراد الصحيح
+from pinecone import Pinecone
 
 app = Flask(__name__)
 load_dotenv()
@@ -17,6 +17,7 @@ load_dotenv()
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # ✅ التعديل هنا: مش needed environment parameter مع الـ new client
 pc = Pinecone(
@@ -42,12 +43,11 @@ docsearch = PineconeVectorStore.from_existing_index(
 
 retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
-# ✅ Chat model using Google Gemini
-chatModel = ChatGoogleGenerativeAI(
-    model="gemini-flash-latest",
+# ✅ Chat model using Groq (higher free-tier rate limits than Google Gemini)
+chatModel = ChatGroq(
+    model="llama-3.1-8b-instant",
     temperature=0.3,
-    convert_system_message_to_human=True,
-    api_key=GOOGLE_API_KEY,
+    api_key=GROQ_API_KEY,
 )
 
 # ✅ Conversation memory: remembers the last 3 interactions only
@@ -80,18 +80,22 @@ def chat():
     previous_context = memory.load_memory_variables({})
 
     # استدعاء السلسلة مع المحادثة السابقة
-    response = rag_chain.invoke({
-        "input": msg,
-        "chat_history": previous_context.get("chat_history", [])
-    })
+    try:
+        response = rag_chain.invoke({
+            "input": msg,
+            "chat_history": previous_context.get("chat_history", [])
+        })
 
-    answer = response["answer"]
-    print("Response:", answer)
+        answer = response["answer"]
+        print("Response:", answer)
 
-    # 💾 حفظ السؤال والإجابة في الذاكرة
-    memory.save_context({"input": msg}, {"output": answer})
+        # 💾 حفظ السؤال والإجابة في الذاكرة
+        memory.save_context({"input": msg}, {"output": answer})
 
-    return str(answer)
+        return str(answer)
+    except Exception as e:
+        print(f"Error generating response: {e}")
+        return "I'm sorry, I'm temporarily unable to process your request. Please try again in a moment."
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=9090, debug=True)

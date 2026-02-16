@@ -6,6 +6,9 @@ python-dotenv==1.1.0
 pinecone-client==4.1.0
 langchain-pinecone==0.2.8
 
-# 👇 التغيير هنا: شيلنا أرقام الإصدارات عشان هو يوفقهم مع بعض
+# Google Gemini (used for embeddings only)
 langchain-google-genai
 google-generativeai
+
+# Groq (used for LLM - higher free-tier limits)
+langchain-groq
