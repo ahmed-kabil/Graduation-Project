@@ -34,6 +34,7 @@ const initialFormState: StaffFormData = {
 const StaffForm: React.FC<{ onSave: () => void; }> = ({ onSave }) => {
     const [formData, setFormData] = useState<StaffFormData>(initialFormState);
     const [isLoading, setIsLoading] = useState(false);
+    const { addToast } = useNotification();
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -48,10 +49,13 @@ const StaffForm: React.FC<{ onSave: () => void; }> = ({ onSave }) => {
         setIsLoading(true);
         try {
             await api.addStaffMember(formData);
+            addToast('Staff member added successfully!', 'success');
             onSave();
             setFormData(initialFormState); // Reset form
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to add staff member", error);
+            const message = error?.message || 'Failed to add staff member. Please try again.';
+            addToast(message, 'error');
         } finally {
             setIsLoading(false);
         }

@@ -19,6 +19,8 @@ export interface SocketMessage {
   patient_name?: string;
   doctor_id?: string;
   patient_id?: string;
+  nurse_id?: string;
+  nurse_name?: string;
 }
 
 export interface SocketErrorMessage {
@@ -30,7 +32,8 @@ export interface SocketErrorMessage {
  */
 class SocketService {
   private socket: Socket | null = null;
-  private messageHandlers: ((message: SocketMessage) => void)[] = [];
+  private docPatMessageHandlers: ((message: SocketMessage) => void)[] = [];
+  private docNurMessageHandlers: ((message: SocketMessage) => void)[] = [];
   private errorHandlers: ((error: SocketErrorMessage) => void)[] = [];
   private connectListeners: (() => void)[] = [];
 
@@ -59,22 +62,27 @@ class SocketService {
     });
 
     this.socket.on('connect', () => {
-      console.log('✅ Socket connected:', this.socket?.id);
+      console.log('Socket connected:', this.socket?.id);
       // Execute any pending connect listeners
       this.connectListeners.forEach(listener => listener());
     });
 
     this.socket.on('disconnect', () => {
-      console.log('🔌 Socket disconnected');
+      console.log('Socket disconnected');
     });
 
-    this.socket.on('receiveMessage', (data: SocketMessage) => {
-      console.log('📨 Message received:', data);
-      this.messageHandlers.forEach(handler => handler(data));
+    this.socket.on('receiveDocPatMessage', (data: SocketMessage) => {
+      console.log('Doc-Pat message received:', data);
+      this.docPatMessageHandlers.forEach(handler => handler(data));
+    });
+
+    this.socket.on('receiveDocNurMessage', (data: SocketMessage) => {
+      console.log('Doc-Nur message received:', data);
+      this.docNurMessageHandlers.forEach(handler => handler(data));
     });
 
     this.socket.on('errorMessage', (data: SocketErrorMessage) => {
-      console.error('❌ Socket error:', data);
+      console.error('Socket error:', data);
       this.errorHandlers.forEach(handler => handler(data));
     });
   }
@@ -86,7 +94,8 @@ class SocketService {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      this.messageHandlers = [];
+      this.docPatMessageHandlers = [];
+      this.docNurMessageHandlers = [];
       this.errorHandlers = [];
       this.connectListeners = [];
     }
@@ -128,29 +137,55 @@ class SocketService {
   }
 
   /**
-   * Send a message through socket
+   * Send a doctor-patient message through socket
    */
-  sendMessage(data: SocketMessage): void {
+  sendDocPatMessage(data: SocketMessage): void {
     if (!this.socket?.connected) {
-      console.warn('⚠️ Socket not connected. Cannot send message.');
+      console.warn('Socket not connected. Cannot send message.');
       return;
     }
-    this.socket.emit('sendMessage', data);
-    console.log('📤 Message sent:', data);
+    this.socket.emit('sendDocPatMessage', data);
+    console.log('Doc-Pat message sent:', data);
   }
 
   /**
-   * Add a handler for incoming messages
+   * Send a doctor-nurse message through socket
    */
-  onMessage(handler: (message: SocketMessage) => void): void {
-    this.messageHandlers.push(handler);
+  sendDocNurMessage(data: SocketMessage): void {
+    if (!this.socket?.connected) {
+      console.warn('Socket not connected. Cannot send message.');
+      return;
+    }
+    this.socket.emit('sendDocNurMessage', data);
+    console.log('Doc-Nur message sent:', data);
   }
 
   /**
-   * Remove a message handler
+   * Add a handler for incoming doctor-patient messages
    */
-  offMessage(handler: (message: SocketMessage) => void): void {
-    this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
+  onDocPatMessage(handler: (message: SocketMessage) => void): void {
+    this.docPatMessageHandlers.push(handler);
+  }
+
+  /**
+   * Remove a doctor-patient message handler
+   */
+  offDocPatMessage(handler: (message: SocketMessage) => void): void {
+    this.docPatMessageHandlers = this.docPatMessageHandlers.filter(h => h !== handler);
+  }
+
+  /**
+   * Add a handler for incoming doctor-nurse messages
+   */
+  onDocNurMessage(handler: (message: SocketMessage) => void): void {
+    this.docNurMessageHandlers.push(handler);
+  }
+
+  /**
+   * Remove a doctor-nurse message handler
+   */
+  offDocNurMessage(handler: (message: SocketMessage) => void): void {
+    this.docNurMessageHandlers = this.docNurMessageHandlers.filter(h => h !== handler);
   }
 
   /**

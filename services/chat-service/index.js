@@ -34,9 +34,11 @@ app.use(express.json());
 // Routes
 const conversationsRouter = require("./routes/conversations_router");
 const messagesRouter = require("./routes/messages_router");
+const internalRouter = require("./routes/internal_router");
 
 app.use("/api/conversations", conversationsRouter);
 app.use("/api/messages", messagesRouter);
+app.use("/internal", internalRouter);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

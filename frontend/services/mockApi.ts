@@ -12,7 +12,7 @@ const BASE_URL = backendUrl !== undefined ? `${backendUrl}/api` : '/api';
 
 
 // --- Helper Functions ---
-const getToken = () => localStorage.getItem('authToken');
+const getToken = () => sessionStorage.getItem('authToken');
 
 const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = getToken();
@@ -153,7 +153,7 @@ export const api = {
         const role = (loginData.role as string).toLowerCase() as Role;
         const userId = loginData.user_id;
 
-        localStorage.setItem('authToken', token);
+        sessionStorage.setItem('authToken', token);
 
         let rawUserDetailsFromAPI: any;
 
@@ -179,7 +179,7 @@ export const api = {
             }
         } catch (detailFetchError) {
             console.error(`Failed to fetch full user details for ${role} with ID ${userId}:`, detailFetchError);
-            localStorage.removeItem('authToken');
+            sessionStorage.removeItem('authToken');
             throw new Error(`Login successful, but failed to retrieve full details for ${role}. Permissions issue or missing user profile.`);
         }
 
@@ -204,10 +204,10 @@ export const api = {
                 }
             }
 
-            localStorage.setItem('user', JSON.stringify(foundUser));
+            sessionStorage.setItem('user', JSON.stringify(foundUser));
             return foundUser;
         } else {
-            localStorage.removeItem('authToken');
+            sessionStorage.removeItem('authToken');
             throw new Error("Login successful, but failed to construct user object.");
         }
     }

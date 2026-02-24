@@ -81,3 +81,9 @@ frontend/dist/
 # Misc
 # ==========================================
 *.zip
+
+# Vite cache
+.vite/
+
+# Misc
+updates.pdf

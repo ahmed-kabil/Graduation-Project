@@ -20,10 +20,12 @@ app.use(express.json());
 const staffRouter = require("./routes/staff_router");
 const patientsRouter = require("./routes/patients_router");
 const otherRouter = require("./routes/other_router");
+const appointmentsRouter = require("./routes/appointments_router");
 
 app.use("/api/staff", staffRouter);
 app.use("/api/patients", patientsRouter);
 app.use("/api/other", otherRouter);
+app.use("/api/appointments", appointmentsRouter);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

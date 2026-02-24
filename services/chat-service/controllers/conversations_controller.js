@@ -1,24 +1,45 @@
-const Conversation = require("../models/conversations-model");
+const { DocPatConversation, DocNurConversation } = require("../models/conversations-model");
 
 /**
- * Get all conversations for a specific doctor
+ * Get a doctor's conversations with patients
  */
-const getDocConversations = async (req, res) => {
+const getDocConversationsWithPat = async (req, res) => {
   const doc_id = req.params.doc_id;
-
   try {
-    const docConversations = await Conversation.find({ doctor_id: doc_id });
-
-    if (!docConversations) {
-      return res.status(404).json({ status: "fail", data: null });
-    }
-    res.json({ status: "success", data: { docConversations: docConversations } });
+    const docConversations = await DocPatConversation.find({ doctor_id: doc_id });
+    if (!docConversations) return res.status(404).json({ status: "fail", data: null });
+    res.json({ status: "success", data: { docConversations } });
   } catch (err) {
-    res.status(400).json({
-      status: "error",
-      message: err.message,
-    });
+    res.status(400).json({ status: "error", message: err.message });
   }
 };
 
-module.exports = { getDocConversations };
+/**
+ * Get a doctor's conversations with nurses
+ */
+const getDocConversationsWithNur = async (req, res) => {
+  const doc_id = req.params.doc_id;
+  try {
+    const docConversations = await DocNurConversation.find({ doctor_id: doc_id });
+    if (!docConversations) return res.status(404).json({ status: "fail", data: null });
+    res.json({ status: "success", data: { docConversations } });
+  } catch (err) {
+    res.status(400).json({ status: "error", message: err.message });
+  }
+};
+
+/**
+ * Get a nurse's conversations with doctors
+ */
+const getNurConversationsWithDoc = async (req, res) => {
+  const nur_id = req.params.nur_id;
+  try {
+    const nurConversations = await DocNurConversation.find({ nurse_id: nur_id });
+    if (!nurConversations) return res.status(404).json({ status: "fail", data: null });
+    res.json({ status: "success", data: { nurConversations } });
+  } catch (err) {
+    res.status(400).json({ status: "error", message: err.message });
+  }
+};
+
+module.exports = { getDocConversationsWithPat, getDocConversationsWithNur, getNurConversationsWithDoc };

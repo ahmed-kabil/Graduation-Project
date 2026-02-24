@@ -1,114 +1,119 @@
 import { Appointment } from '../types';
 import { socketService } from './socketService';
+import { chatService } from './chatService';
 
-const APPOINTMENTS_KEY = 'hospital_appointments';
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
+const BASE_URL = backendUrl !== undefined ? `${backendUrl}/api` : '/api';
 
-const getAllAppointments = (): Appointment[] => {
-    try {
-        const appointmentsJson = localStorage.getItem(APPOINTMENTS_KEY);
-        return appointmentsJson ? JSON.parse(appointmentsJson) : [];
-    } catch (error) {
-        console.error("Failed to parse appointments from localStorage", error);
-        return [];
-    }
+/**
+ * Helper for authenticated API requests
+ */
+const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
+  const token = sessionStorage.getItem('authToken');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
+  };
+  const response = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers });
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new Error(errorBody.message || `API request failed: ${response.statusText}`);
+  }
+  return response.json();
 };
 
-const saveAllAppointments = (appointments: Appointment[]) => {
-    try {
-        localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(appointments));
-    } catch (error) {
-        console.error("Failed to save appointments to localStorage", error);
-    }
-};
+export interface BookAppointmentData {
+  patient_id: string;
+  doctor_id: string;
+  date: string;   // YYYY-MM-DD
+  time: string;   // HH:mm
+  reason: string;
+}
 
 export const appointmentService = {
-    getAppointmentsForPatient: (patientId: string): Promise<Appointment[]> => {
-        return new Promise(resolve => {
-            const allAppointments = getAllAppointments();
-            const patientAppointments = allAppointments.filter(app => app.patientId === patientId);
-            resolve(patientAppointments);
-        });
-    },
-    
-    getAppointmentsForDoctor: (doctorPatientIds: string[]): Promise<Appointment[]> => {
-         return new Promise(resolve => {
-            const allAppointments = getAllAppointments();
-            const doctorAppointments = allAppointments.filter(app => doctorPatientIds.includes(app.patientId) && app.status === 'booked');
-            resolve(doctorAppointments);
-        });
-    },
+  /**
+   * GET /api/appointments/for_pat/{patient_id}
+   */
+  getAppointmentsForPatient: async (patientId: string): Promise<Appointment[]> => {
+    const res = await apiRequest(`/appointments/for_pat/${patientId}`);
+    return (res.data?.appointments || res.data?.patAppointments || []) as Appointment[];
+  },
 
-    getBookedTimes: (doctorId: string, date: string): Promise<string[]> => {
-        return new Promise(resolve => {
-            const allAppointments = getAllAppointments();
-            const bookedTimes = allAppointments
-                .filter(app => app.doctorId === doctorId && app.date === date && app.status === 'booked')
-                .map(app => app.time);
-            resolve(bookedTimes);
-        });
-    },
+  /**
+   * GET /api/appointments/for_doc/{doctor_id}
+   */
+  getAppointmentsForDoctor: async (doctorId: string): Promise<Appointment[]> => {
+    const res = await apiRequest(`/appointments/for_doc/${doctorId}`);
+    return (res.data?.appointments || res.data?.docAppointments || []) as Appointment[];
+  },
 
-    bookAppointment: (appointmentData: Omit<Appointment, 'id' | 'status'>): Promise<Appointment> => {
-        return new Promise((resolve, reject) => {
-            const allAppointments = getAllAppointments();
-            const newAppointment: Appointment = {
-                ...appointmentData,
-                id: `appt-${Date.now()}`,
-                status: 'booked',
-            };
+  /**
+   * Derive booked time slots for a given doctor+date from the doctor's appointment list
+   */
+  getBookedTimes: async (doctorId: string, date: string): Promise<string[]> => {
+    const appointments = await appointmentService.getAppointmentsForDoctor(doctorId);
+    return appointments
+      .filter(app => {
+        const appDate = app.date.includes('T') ? app.date.split('T')[0] : app.date;
+        return appDate === date && app.status === 'booked';
+      })
+      .map(app => app.time);
+  },
 
-            const isSlotTaken = allAppointments.some(
-                app => app.date === newAppointment.date && 
-                       app.time === newAppointment.time && 
-                       app.doctorId === newAppointment.doctorId &&
-                       app.status === 'booked'
-            );
+  /**
+   * POST /api/appointments/add
+   * Also emits a socket "newAppointment" event for real-time doctor notification.
+   */
+  bookAppointment: async (data: BookAppointmentData): Promise<Appointment> => {
+    const res = await apiRequest('/appointments/add', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    const created: Appointment = res.data?.appointment || res.data;
 
-            if (isSlotTaken) {
-                return reject(new Error("This time slot is no longer available."));
-            }
+    // Real-time notification via socket
+    try {
+      socketService.connect();
+      const conversationId = chatService.getConversationId(data.patient_id);
+      socketService.joinConversation(conversationId);
 
-            allAppointments.push(newAppointment);
-            saveAllAppointments(allAppointments);
-            
-            // Ensure socket is connected and emit real-time notification
-            console.log('💡 Attempting to send appointment notification...');
-            socketService.connect(); // Ensure connection
-            
-            // Use setTimeout to give socket time to connect if needed
-            setTimeout(() => {
-                const socket = socketService.getSocket();
-                if (socket && socketService.isConnected()) {
-                    const notificationData = {
-                        appointmentId: newAppointment.id,
-                        doctorId: newAppointment.doctorId,
-                        patientId: newAppointment.patientId,
-                        patientName: newAppointment.patientName,
-                        date: newAppointment.date,
-                        time: newAppointment.time,
-                    };
-                    socket.emit('newAppointment', notificationData);
-                    console.log('📅 New appointment notification emitted:', notificationData);
-                } else {
-                    console.warn('⚠️ Socket not connected, notification not sent');
-                }
-            }, 500); // Wait 500ms for connection
-            
-            resolve(newAppointment);
-        });
-    },
+      const socket = socketService.getSocket();
+      if (socket && socketService.isConnected()) {
+        const notificationData = {
+          patient_id: data.patient_id,
+          doctor_id: data.doctor_id,
+          date: data.date,
+          time: data.time,
+          reason: data.reason,
+          conversation_id: conversationId,
+        };
+        socket.emit('newAppointment', notificationData);
+        console.log('📅 newAppointment socket event emitted:', notificationData);
+      }
+    } catch (err) {
+      console.warn('⚠️ Failed to emit newAppointment socket event:', err);
+    }
 
-    cancelAppointment: (appointmentId: string): Promise<boolean> => {
-        return new Promise(resolve => {
-            let allAppointments = getAllAppointments();
-            const appointmentIndex = allAppointments.findIndex(app => app.id === appointmentId);
-            if (appointmentIndex !== -1) {
-                allAppointments[appointmentIndex].status = 'cancelled';
-                saveAllAppointments(allAppointments);
-                resolve(true);
-            } else {
-                resolve(false);
-            }
-        });
-    },
+    return created;
+  },
+
+  /**
+   * DELETE /api/appointments/{_id}
+   */
+  cancelAppointment: async (appointmentId: string): Promise<boolean> => {
+    await apiRequest(`/appointments/${appointmentId}`, { method: 'DELETE' });
+    return true;
+  },
+
+  /**
+   * POST /api/appointments/fulfill
+   */
+  fulfillAppointment: async (appointmentId: string): Promise<Appointment> => {
+    const res = await apiRequest('/appointments/fulfill', {
+      method: 'POST',
+      body: JSON.stringify({ _id: appointmentId }),
+    });
+    return res.data?.appointment || res.data;
+  },
 };

@@ -2,9 +2,13 @@ const Readings = require("../models/readings-model");
 const Patients = require("../models/patients-model");
 const Staff = require("../models/staff-model");
 const Login = require("../models/login-model");
-const Conversations = require("../models/conversations-model");
-const Messages = require("../models/messages-model");
 const bcrypt = require("bcryptjs");
+
+/**
+ * Chat Service internal API base URL
+ * Used for cross-service conversation management (keeps databases separated)
+ */
+const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || "http://chat-service:4004";
 
 /**
  * Get all patients
@@ -38,6 +42,7 @@ const getPatientById = async (req, res) => {
 
 /**
  * Add new patient
+ * Creates patient, login, and doctor-patient conversation (via chat-service)
  */
 const addNewPatient = async (req, res) => {
   try {
@@ -57,17 +62,25 @@ const addNewPatient = async (req, res) => {
       role: "patient",
     });
 
-    let new_conversation = await new Conversations({
-      conversation_id: `conv_${new_patient.patient_id}`,
-      doctor_id: new_patient.doctor_id,
-      patient_id: new_patient.patient_id,
-      patient_name: new_patient.name,
-      last_message: "",
-    });
-
     await new_patient.save();
     await new_login.save();
-    await new_conversation.save();
+
+    // Cross-service call: create doctor-patient conversation in chat-service
+    try {
+      await fetch(`${CHAT_SERVICE_URL}/internal/conversations/doc-pat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversation_id: `conv_${new_patient.patient_id}`,
+          doctor_id: new_patient.doctor_id,
+          patient_id: new_patient.patient_id,
+          patient_name: new_patient.name,
+        }),
+      });
+    } catch (chatErr) {
+      console.error("⚠️ Failed to create conversation in chat-service:", chatErr.message);
+    }
+
     res.status(201).json({ status: "success", data: { patient: new_patient } });
   } catch (err) {
     res.status(400).json({
@@ -79,6 +92,7 @@ const addNewPatient = async (req, res) => {
 
 /**
  * Delete patient by ID
+ * Removes patient, login, readings, and conversation+messages (via chat-service)
  */
 const deletePatientById = async (req, res) => {
   try {
@@ -86,8 +100,17 @@ const deletePatientById = async (req, res) => {
     await Patients.deleteOne({ patient_id: req.params.id });
     await Login.deleteOne({ user_id: req.params.id });
     await Readings.deleteMany({ device_id: patient.device_id });
-    await Conversations.deleteOne({ conversation_id: `conv_${patient.patient_id}` });
-    await Messages.deleteMany({ conversation_id: `conv_${patient.patient_id}` });
+
+    // Cross-service call: delete conversation and messages in chat-service
+    try {
+      await fetch(
+        `${CHAT_SERVICE_URL}/internal/conversations/doc-pat/conv_${patient.patient_id}`,
+        { method: "DELETE" }
+      );
+    } catch (chatErr) {
+      console.error("⚠️ Failed to delete conversation in chat-service:", chatErr.message);
+    }
+
     res.status(200).json({ status: "success", data: null });
   } catch (err) {
     res.status(400).json({ status: "error", message: err.message });
@@ -96,6 +119,7 @@ const deletePatientById = async (req, res) => {
 
 /**
  * Update patient by ID
+ * Also updates login and conversation (via chat-service)
  */
 const updatePatient = async (req, res) => {
   const id = req.params.id;
@@ -126,27 +150,29 @@ const updatePatient = async (req, res) => {
       loginFields.password = hashed_password;
     }
     
-    // 3) Update Login
-    const editedUser = await Login.findOneAndUpdate(
+    // 2) Update Login
+    await Login.findOneAndUpdate(
       { user_id: id },
       { $set: loginFields },
       { new: true }
     );
 
-    console.log(req.body);
-    let new_conv_id = `conv_${newId}`;
+    // 3) Cross-service call: update conversation in chat-service
     let new_conv_content = {};
     if (req.body.patient_id) new_conv_content.patient_id = req.body.patient_id;
     if (req.body.doctor_id) new_conv_content.doctor_id = req.body.doctor_id;
     if (req.body.name) new_conv_content.patient_name = req.body.name;
-    if (req.body.patient_id) new_conv_content.conversation_id = new_conv_id;
-    console.log(new_conv_content);
-    
-    await Conversations.findOneAndUpdate(
-      { conversation_id: `conv_${id}` },
-      { $set: new_conv_content },
-      { new: true }
-    );
+    if (req.body.patient_id) new_conv_content.conversation_id = `conv_${newId}`;
+
+    try {
+      await fetch(`${CHAT_SERVICE_URL}/internal/conversations/doc-pat/conv_${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(new_conv_content),
+      });
+    } catch (chatErr) {
+      console.error("⚠️ Failed to update conversation in chat-service:", chatErr.message);
+    }
 
     res.json({ status: "success", data: { user: editedPatient } });
   } catch (err) {

@@ -73,8 +73,10 @@ services:
       - PORT=4002
       - DATABASE_URL=mongodb://mongo:27017/hospital_db
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - CHAT_SERVICE_URL=http://chat-service:4004
     depends_on:
       - mongo
+      - chat-service
     networks:
       - hospital-network
     restart: unless-stopped

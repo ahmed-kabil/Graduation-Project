@@ -87,13 +87,15 @@ export interface DoctorPatientMessage {
 }
 
 export interface Appointment {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  date: string; // YYYY-MM-DD
+  _id: string;
+  patient_id: string;
+  doctor_id: string;
+  date: string; // YYYY-MM-DD or ISO date string
   time: string; // HH:mm
   reason: string;
-  status: 'booked' | 'completed' | 'cancelled';
+  status: 'booked' | 'fulfilled' | 'cancelled';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // FIX: Added AnalyticsData interface for the management dashboard.

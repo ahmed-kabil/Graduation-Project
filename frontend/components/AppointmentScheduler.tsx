@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Patient, Doctor, Appointment } from '../types';
-import { appointmentService } from '../services/appointmentService';
+import { appointmentService, BookAppointmentData } from '../services/appointmentService';
 import { api } from '../services/mockApi';
 
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>;
@@ -59,9 +59,9 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
         setError(null);
         setSuccess(null);
 
-        const appointmentData = {
-            patientId: patient.id,
-            doctorId: doctor.id,
+        const appointmentData: BookAppointmentData = {
+            patient_id: patient.id,
+            doctor_id: doctor.id,
             date: selectedDate.toISOString().split('T')[0],
             time: selectedTime,
             reason: reason.trim(),
@@ -152,7 +152,14 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
         );
     };
 
-    const upcomingAppointments = appointments.filter(a => new Date(`${a.date}T00:00:00`) >= new Date(new Date().setHours(0,0,0,0)) && a.status === 'booked').sort((a,b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime());
+    const upcomingAppointments = appointments.filter(a => {
+        const appDate = a.date.includes('T') ? a.date.split('T')[0] : a.date;
+        return new Date(`${appDate}T00:00:00`) >= new Date(new Date().setHours(0,0,0,0)) && a.status === 'booked';
+    }).sort((a,b) => {
+        const dateA = a.date.includes('T') ? a.date.split('T')[0] : a.date;
+        const dateB = b.date.includes('T') ? b.date.split('T')[0] : b.date;
+        return new Date(`${dateA}T${a.time}`).getTime() - new Date(`${dateB}T${b.time}`).getTime();
+    });
 
     return (
         <>
@@ -201,18 +208,21 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                 <div className="bg-white p-6 rounded-xl shadow-md">
                      <h3 className="text-xl font-semibold text-slate-800 mb-4">Your Appointments</h3>
                      <div className="space-y-4 max-h-[calc(100vh-16rem)] overflow-y-auto">
-                        {upcomingAppointments.length > 0 ? upcomingAppointments.map(app => (
-                            <div key={app.id} className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                        {upcomingAppointments.length > 0 ? upcomingAppointments.map(app => {
+                            const appDate = app.date.includes('T') ? app.date.split('T')[0] : app.date;
+                            return (
+                            <div key={app._id} className="p-4 rounded-lg bg-slate-50 border border-slate-200">
                                  <div className="flex items-center text-slate-700 font-semibold mb-1">
                                     <CalendarIcon />
-                                    <span>{new Date(app.date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {app.time}</span>
+                                    <span>{new Date(appDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {app.time}</span>
                                 </div>
                                 <p className="text-sm text-slate-600 pl-7 mb-2"><strong>Reason:</strong> {app.reason}</p>
                                 <div className="pl-7">
-                                   <button onClick={() => promptCancel(app.id)} className="text-xs text-red-600 hover:underline">Cancel Appointment</button>
+                                   <button onClick={() => promptCancel(app._id)} className="text-xs text-red-600 hover:underline">Cancel Appointment</button>
                                 </div>
                             </div>
-                        )) : <p className="text-slate-500">You have no upcoming appointments.</p>}
+                            );
+                        }) : <p className="text-slate-500">You have no upcoming appointments.</p>}
                      </div>
                 </div>
             </div>

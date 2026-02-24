@@ -212,7 +212,7 @@ const Chatbot: React.FC = () => {
                     <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                         {msg.sender === 'bot' && <div className="w-8 h-8 rounded-full bg-indigo-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">AI</div>}
                         <div className={`max-w-lg px-4 py-3 rounded-2xl ${msg.sender === 'user' ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-slate-200 text-slate-800 rounded-bl-none'}`}>
-                            <p>{msg.text}</p>
+                            <p dir="auto">{msg.text}</p>
                         </div>
                     </div>
                 ))}
@@ -227,6 +227,7 @@ const Chatbot: React.FC = () => {
                         onChange={e => setInput(e.target.value)}
                         onKeyPress={e => e.key === 'Enter' && handleSend()}
                         placeholder="Type your message..."
+                        dir="auto"
                         className="w-full px-4 py-2 border text-slate-800 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         disabled={isLoading}
                     />
@@ -313,11 +314,11 @@ const DoctorChatModal: React.FC<{
       }
     };
 
-    socketService.onMessage(handleIncomingMessage);
+    socketService.onDocPatMessage(handleIncomingMessage);
 
     // Cleanup on close
     return () => {
-      socketService.offMessage(handleIncomingMessage);
+      socketService.offDocPatMessage(handleIncomingMessage);
     };
   }, [isOpen, patient.id, doctor.id, fetchMessages]);
 
@@ -346,9 +347,9 @@ const DoctorChatModal: React.FC<{
         patient_id: patient.id,
       };
       
-      socketService.sendMessage(socketMessage);
+      socketService.sendDocPatMessage(socketMessage);
       
-      // Note: The message will be added to the UI when we receive it back via 'receiveMessage' event
+      // Note: The message will be added to the UI when we receive it back via 'receiveDocPatMessage' event
     } catch (error) {
       console.error('Error sending message:', error);
       // Restore input on error
@@ -378,8 +379,15 @@ const DoctorChatModal: React.FC<{
           {messages.map(msg => (
             <div key={msg.id} className={`flex items-end gap-2 ${msg.senderId === patient.id ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-md px-4 py-3 rounded-2xl ${msg.senderId === patient.id ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-slate-200 text-slate-800 rounded-bl-none'}`}>
-                <p>{msg.text}</p>
-                <p className="text-xs opacity-70 mt-1 text-right">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                <p dir="auto">{msg.text}</p>
+                <div className="flex items-center justify-end gap-1 mt-1">
+                  <p className="text-xs opacity-70">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  {msg.senderId === patient.id && (
+                    <span className={`text-xs ${msg.read ? 'opacity-100' : 'opacity-60'}`} title={msg.read ? 'Read' : 'Sent'}>
+                      {msg.read ? '✓✓' : '✓'}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -393,6 +401,7 @@ const DoctorChatModal: React.FC<{
               onChange={e => setInput(e.target.value)}
               onKeyPress={e => e.key === 'Enter' && handleSend()}
               placeholder="Type your message..."
+              dir="auto"
               className="w-full px-4 py-2 border text-slate-800 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
               disabled={isLoading}
             />
@@ -452,6 +461,16 @@ export const PatientDashboard: React.FC = () => {
     useEffect(() => {
         api.getDoctor(patient.assignedDoctorId).then(doc => doc && setDoctor(doc));
     }, [patient.assignedDoctorId]);
+
+    // Connect socket on mount so appointment notifications work
+    useEffect(() => {
+        socketService.connect();
+        socketService.goOnline(patient.id);
+
+        // Join the patient's conversation room so newAppointment event reaches the doctor
+        const conversationId = chatService.getConversationId(patient.id);
+        socketService.joinConversation(conversationId);
+    }, [patient.id]);
 
     useEffect(() => {
         if (!doctor) return;

@@ -1,5 +1,5 @@
 const Message = require("../models/messages-model");
-const Conversation = require("../models/conversations-model");
+const { DocPatConversation } = require("../models/conversations-model");
 
 /**
  * Send a message (stores in DB)
@@ -7,6 +7,7 @@ const Conversation = require("../models/conversations-model");
 const sendMessage = async (req, res) => {
   const { conversation_id, sender_id, receiver_id, message, patient_name, doctor_id, patient_id } = req.body;
   try {
+    console.log("the api message hitted");
     let newMsg = await new Message({
       conversation_id: conversation_id,
       sender_id: sender_id,
@@ -22,7 +23,7 @@ const sendMessage = async (req, res) => {
     const derivedPatientName = patient_name || derivedPatientId;
 
     // Upsert conversation — creates if it doesn't exist
-    await Conversation.findOneAndUpdate(
+    await DocPatConversation.findOneAndUpdate(
       { conversation_id: conversation_id },
       {
         $set: {
