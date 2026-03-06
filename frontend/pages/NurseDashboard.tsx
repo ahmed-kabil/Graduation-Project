@@ -9,6 +9,7 @@ import { PatientDetailView } from '../components/PatientDetailView';
 import { useAlert } from '../context/AlertContext';
 import { socketService, SocketMessage } from '../services/socketService';
 import { chatService, DocNurConversation } from '../services/chatService';
+import { getDateLabel, dateKey } from '../services/dateLabelUtils';
 
 // Icons
 const PatientListIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
@@ -179,21 +180,34 @@ const DoctorMessagingView: React.FC<{ nurse: Nurse }> = ({ nurse }) => {
                 <h3 className="text-xl font-semibold text-slate-800 truncate">Chat with Dr. {selectedConvo.doctor_name}</h3>
               </div>
               <div className="flex-1 p-4 sm:p-6 overflow-y-auto overscroll-contain space-y-4">
-                {messages.map(msg => (
-                  <div key={msg.id} className={`flex items-end gap-2 ${msg.senderId === nurse.id ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] sm:max-w-lg px-4 py-3 rounded-2xl ${msg.senderId === nurse.id ? 'bg-sky-500 text-white rounded-br-none' : 'bg-slate-200 text-slate-800 rounded-bl-none'}`}>
-                      <p className="break-words" dir="auto">{msg.text}</p>
-                      <div className="flex items-center justify-end gap-1 mt-1">
-                        <p className="text-xs opacity-70">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                        {msg.senderId === nurse.id && (
-                          <span className={`text-xs ${msg.read ? 'opacity-100' : 'opacity-60'}`} title={msg.read ? 'Read' : 'Sent'}>
-                            {msg.read ? '✓✓' : '✓'}
-                          </span>
-                        )}
+                {messages.map((msg, idx) => {
+                  const msgDate = new Date(msg.timestamp);
+                  const currentKey = dateKey(msgDate);
+                  const prevKey = idx > 0 ? dateKey(new Date(messages[idx - 1].timestamp)) : null;
+                  const showSeparator = currentKey !== prevKey;
+                  return (
+                    <React.Fragment key={msg.id}>
+                      {showSeparator && (
+                        <div className="flex items-center justify-center my-3">
+                          <span className="bg-white text-slate-500 text-xs font-medium px-3 py-1 rounded-full shadow-sm border border-slate-200">{getDateLabel(msgDate)}</span>
+                        </div>
+                      )}
+                      <div className={`flex items-end gap-2 ${msg.senderId === nurse.id ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[85%] sm:max-w-lg px-4 py-3 rounded-2xl ${msg.senderId === nurse.id ? 'bg-sky-500 text-white rounded-br-none' : 'bg-slate-200 text-slate-800 rounded-bl-none'}`}>
+                          <p className="break-words" dir="auto">{msg.text}</p>
+                          <div className="flex items-center justify-end gap-1 mt-1">
+                            <p className="text-xs opacity-70">{msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                            {msg.senderId === nurse.id && (
+                              <span className={`text-xs ${msg.read ? 'opacity-100' : 'opacity-60'}`} title={msg.read ? 'Read' : 'Sent'}>
+                                {msg.read ? '✓✓' : '✓'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    </React.Fragment>
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </div>
               <div className="p-3 sm:p-4 border-t bg-slate-50 flex-shrink-0">

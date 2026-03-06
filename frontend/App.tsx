@@ -19,8 +19,8 @@ const App: React.FC = () => {
   return (
     <>
       <ToastContainer />
-      {user && user.role !== Role.Patient && <GlobalVitalsMonitor />}
-      {user && user.role !== Role.Patient && <NotificationPermissionBanner />}
+      {user && (user.role === Role.Doctor || user.role === Role.Nurse) && <GlobalVitalsMonitor />}
+      {user && (user.role === Role.Doctor || user.role === Role.Nurse) && <NotificationPermissionBanner />}
       {(() => {
         if (isLoading) {
           return <div className="flex items-center justify-center h-screen bg-slate-100 text-slate-800">Loading...</div>;

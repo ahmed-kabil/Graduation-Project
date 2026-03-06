@@ -10,6 +10,7 @@ import { AppointmentScheduler } from '../components/AppointmentScheduler';
 import { useNotification } from '../context/NotificationContext';
 import { socketService, SocketMessage } from '../services/socketService';
 import { chatService } from '../services/chatService';
+import { getDateLabel, dateKey } from '../services/dateLabelUtils';
 
 // Icons
 const VitalsIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>;
@@ -376,21 +377,34 @@ const DoctorChatModal: React.FC<{
           <button onClick={onClose} className="text-slate-500 hover:text-slate-800 text-3xl font-light">&times;</button>
         </header>
         <div className="flex-1 p-6 overflow-y-auto space-y-4">
-          {messages.map(msg => (
-            <div key={msg.id} className={`flex items-end gap-2 ${msg.senderId === patient.id ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-md px-4 py-3 rounded-2xl ${msg.senderId === patient.id ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-slate-200 text-slate-800 rounded-bl-none'}`}>
-                <p dir="auto">{msg.text}</p>
-                <div className="flex items-center justify-end gap-1 mt-1">
-                  <p className="text-xs opacity-70">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                  {msg.senderId === patient.id && (
-                    <span className={`text-xs ${msg.read ? 'opacity-100' : 'opacity-60'}`} title={msg.read ? 'Read' : 'Sent'}>
-                      {msg.read ? '✓✓' : '✓'}
-                    </span>
-                  )}
+          {messages.map((msg, idx) => {
+            const msgDate = new Date(msg.timestamp);
+            const currentKey = dateKey(msgDate);
+            const prevKey = idx > 0 ? dateKey(new Date(messages[idx - 1].timestamp)) : null;
+            const showSeparator = currentKey !== prevKey;
+            return (
+              <React.Fragment key={msg.id}>
+                {showSeparator && (
+                  <div className="flex items-center justify-center my-3">
+                    <span className="bg-white text-slate-500 text-xs font-medium px-3 py-1 rounded-full shadow-sm border border-slate-200">{getDateLabel(msgDate)}</span>
+                  </div>
+                )}
+                <div className={`flex items-end gap-2 ${msg.senderId === patient.id ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-md px-4 py-3 rounded-2xl ${msg.senderId === patient.id ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-slate-200 text-slate-800 rounded-bl-none'}`}>
+                    <p dir="auto">{msg.text}</p>
+                    <div className="flex items-center justify-end gap-1 mt-1">
+                      <p className="text-xs opacity-70">{msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      {msg.senderId === patient.id && (
+                        <span className={`text-xs ${msg.read ? 'opacity-100' : 'opacity-60'}`} title={msg.read ? 'Read' : 'Sent'}>
+                          {msg.read ? '✓✓' : '✓'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </React.Fragment>
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
         <div className="p-4 border-t bg-slate-50 rounded-b-2xl flex-shrink-0">

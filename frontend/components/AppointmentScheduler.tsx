@@ -68,12 +68,13 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
         };
 
         try {
-            await appointmentService.bookAppointment(appointmentData);
+            const created = await appointmentService.bookAppointment(appointmentData);
             setSuccess(`Appointment booked successfully for ${selectedTime} on ${selectedDate.toLocaleDateString()}!`);
-            fetchAppointments();
+            // Immediately append the new appointment to local state so the list updates instantly
+            setAppointments(prev => [...prev, created]);
             setSelectedTime(null);
             setReason('');
-             const dateString = selectedDate.toISOString().split('T')[0];
+            const dateString = selectedDate.toISOString().split('T')[0];
             appointmentService.getBookedTimes(doctor.id, dateString).then(setBookedTimes);
         } catch (e: any) {
             setError(e.message);
@@ -172,18 +173,32 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                 {AVAILABLE_TIMES.map(time => {
                                     const isBooked = bookedTimes.includes(time);
+
+                                    // Disable slots that have already passed when the selected date is today
+                                    const now = new Date();
+                                    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                                    const selectedDateStr = selectedDate ? selectedDate.toISOString().split('T')[0] : '';
+                                    const isToday = selectedDateStr === todayStr;
+                                    const isPastSlot = isToday && (() => {
+                                        const [h, m] = time.split(':').map(Number);
+                                        const slotMinutes = h * 60 + m;
+                                        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+                                        return slotMinutes <= nowMinutes;
+                                    })();
+
+                                    const isDisabled = isBooked || isPastSlot;
                                     return (
                                         <button
                                             key={time}
-                                            disabled={isBooked}
+                                            disabled={isDisabled}
                                             onClick={() => setSelectedTime(time)}
                                             className={`
                                                 p-3 rounded-lg text-sm font-medium transition-colors duration-200
-                                                ${isBooked ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-800 hover:bg-blue-200'}
+                                                ${isDisabled ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-800 hover:bg-blue-200'}
                                                 ${selectedTime === time ? 'bg-blue-600 text-white font-bold ring-2 ring-offset-2 ring-blue-500' : ''}
                                             `}
                                         >
-                                            {time}
+                                            {time}{isPastSlot && !isBooked ? ' (passed)' : ''}
                                         </button>
                                     );
                                 })}

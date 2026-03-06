@@ -4,13 +4,11 @@ import React, { useState, useEffect, useCallback, FormEvent } from 'react';
 import { Layout } from '../components/Layout';
 import { Doctor, Nurse, Receptionist, Role } from '../types';
 import { api } from '../services/mockApi';
-import { useAlert } from '../context/AlertContext';
 import { useNotification } from '../context/NotificationContext';
 
 // Icons
 const StaffIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
 const AddIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 mr-2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
-const AlertIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>;
 const DeleteIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>;
 
 type StaffFormData = {
@@ -90,7 +88,6 @@ export const AdminDashboard: React.FC = () => {
     const [nurses, setNurses] = useState<Nurse[]>([]);
     const [receptionists, setReceptionists] = useState<Receptionist[]>([]);
     const [activeTab, setActiveTab] = useState('Staff Management');
-    const { alerts } = useAlert();
     const { addToast } = useNotification();
     const [staffToDelete, setStaffToDelete] = useState<(Doctor | Nurse | Receptionist) | null>(null);
 
@@ -128,8 +125,7 @@ export const AdminDashboard: React.FC = () => {
     };
 
     const sidebarItems = [
-        { name: 'Staff Management', icon: <StaffIcon />, onClick: () => setActiveTab('Staff Management') },
-        { name: 'Alerts', icon: <div className="relative"><AlertIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${alerts.length > 0 ? 'opacity-100' : 'opacity-0'}`}>{alerts.length}</span></div>, onClick: () => setActiveTab('Alerts') }
+        { name: 'Staff Management', icon: <StaffIcon />, onClick: () => setActiveTab('Staff Management') }
     ];
 
     const StaffList: React.FC<{ 
@@ -160,22 +156,6 @@ export const AdminDashboard: React.FC = () => {
         </div>
     );
     
-    const renderAlerts = () => (
-        <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-semibold text-slate-800 mb-4">All Critical Alerts ({alerts.length})</h3>
-            <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto">
-                {alerts.length === 0 ? <p className="text-slate-500">No active alerts.</p> :
-                 alerts.map(a => (
-                    <div key={a.id} className="p-4 rounded-lg bg-red-50 border border-red-200">
-                        <p className="font-bold text-red-700">{a.message}</p>
-                        <p className="text-sm text-red-600">Patient: {a.patientName} | Value: {a.value}</p>
-                        <p className="text-xs text-slate-500 mt-1">{a.timestamp.toLocaleString()}</p>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-
     const renderStaffManagement = () => (
         <div className="space-y-6">
             <StaffForm onSave={fetchData} />
@@ -189,8 +169,6 @@ export const AdminDashboard: React.FC = () => {
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'Alerts':
-                return renderAlerts();
             case 'Staff Management':
             default:
                 return renderStaffManagement();
