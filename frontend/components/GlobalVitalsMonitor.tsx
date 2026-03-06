@@ -6,6 +6,7 @@ import { api } from '../services/mockApi';
 import { Patient, VitalSign, Alert } from '../types';
 import { useAlert } from '../context/AlertContext';
 import { useNotification } from '../context/NotificationContext';
+import { useAlertNotification } from '../hooks/useAlertNotification';
 
 const createInitialVitals = (): VitalSign[] => [
     { name: 'Heart Rate', value: 0, unit: 'BPM', thresholds: { min: 50, max: 120 } },
@@ -25,6 +26,7 @@ export const GlobalVitalsMonitor: React.FC = () => {
     const [patients, setPatients] = useState<Patient[]>([]);
     const { addAlert, removeAlert } = useAlert();
     const { addToast } = useNotification();
+    const { triggerAlert } = useAlertNotification();
     const previousAlertStatusRef = useRef<Record<string, boolean>>({});
 
     useEffect(() => {
@@ -73,6 +75,8 @@ export const GlobalVitalsMonitor: React.FC = () => {
                                 addAlert(newAlert);
                                 if (!wasPreviouslyAlerting) {
                                    addToast(`Critical Alert for ${newAlert.patientName}: ${newAlert.message}`, 'error');
+                                   // System notification + in-page alarm sound
+                                   triggerAlert(newAlert);
                                 }
                             } else if (wasPreviouslyAlerting) {
                                 removeAlert(patient.id, vital.name);
@@ -92,7 +96,7 @@ export const GlobalVitalsMonitor: React.FC = () => {
         const intervalId = setInterval(checkAllVitals, 5000);
         return () => clearInterval(intervalId);
 
-    }, [patients, addAlert, removeAlert, addToast]);
+    }, [patients, addAlert, removeAlert, addToast, triggerAlert]);
 
     return null;
 };

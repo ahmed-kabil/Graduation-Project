@@ -11,6 +11,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { Role, User } from './types'; // Import User if not already
 import { ToastContainer } from './components/ToastNotification';
 import { GlobalVitalsMonitor } from './components/GlobalVitalsMonitor';
+import { NotificationPermissionBanner } from './components/NotificationPermissionBanner';
 
 const App: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -19,6 +20,7 @@ const App: React.FC = () => {
     <>
       <ToastContainer />
       {user && user.role !== Role.Patient && <GlobalVitalsMonitor />}
+      {user && user.role !== Role.Patient && <NotificationPermissionBanner />}
       {(() => {
         if (isLoading) {
           return <div className="flex items-center justify-center h-screen bg-slate-100 text-slate-800">Loading...</div>;
