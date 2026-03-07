@@ -472,6 +472,7 @@ export const PatientDashboard: React.FC = () => {
     const patient = user as Patient;
     const { addToast } = useNotification();
     const notifiedMessagesRef = useRef<Set<string>>(new Set());
+    const [unreadDoctorMessages, setUnreadDoctorMessages] = useState(0);
 
     useEffect(() => {
         api.getDoctor(patient.assignedDoctorId).then(doc => doc && setDoctor(doc));
@@ -492,6 +493,8 @@ export const PatientDashboard: React.FC = () => {
 
         const checkMessages = async () => {
             const messages = await api.getConversation(patient.id, doctor.id);
+            const unreadFromDoctor = messages.filter(m => m.senderId === doctor.id && !m.read);
+            setUnreadDoctorMessages(unreadFromDoctor.length);
             if (messages.length > 0) {
                 const lastMessage = messages[messages.length - 1];
 
@@ -519,7 +522,7 @@ export const PatientDashboard: React.FC = () => {
         { name: 'Vitals', icon: <VitalsIcon/>, onClick: () => setActiveTab('Vitals') },
         { name: 'Appointments', icon: <AppointmentIcon/>, onClick: () => setActiveTab('Appointments') },
         { name: 'Chatbot', icon: <ChatbotIcon/>, onClick: () => setActiveTab('Chatbot') },
-        { name: 'Doctor Info', icon: <DoctorIcon/>, onClick: () => setActiveTab('Doctor Info') },
+        { name: 'Doctor Info', icon: <div className="relative"><DoctorIcon/><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${unreadDoctorMessages > 0 ? 'opacity-100' : 'opacity-0'}`}>{unreadDoctorMessages}</span></div>, onClick: () => { setActiveTab('Doctor Info'); setUnreadDoctorMessages(0); } },
         { name: 'Profile', icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>, onClick: () => setActiveTab('Profile') }
     ];
 

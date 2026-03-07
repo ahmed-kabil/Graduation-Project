@@ -536,6 +536,7 @@ export const DoctorDashboard: React.FC = () => {
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [conversations, setConversations] = useState<{patient: Patient, lastMessage: DoctorPatientMessage, unreadCount: number}[]>([]);
     const [newAppointmentCount, setNewAppointmentCount] = useState(0);
+    const [nurseUnreadCount, setNurseUnreadCount] = useState(0);
     const [autoSelectPatientId, setAutoSelectPatientId] = useState<string | undefined>(undefined);
     const { addToast } = useNotification();
     const { alerts, unreadCount, markAllRead, dismissAlert, isAlertRead } = useAlert();
@@ -615,9 +616,11 @@ export const DoctorDashboard: React.FC = () => {
             // Also poll nurse conversations for notifications
             try {
                 const nurseConvos = await chatService.getDoctorNurseConversations(doctor.id);
+                let totalNurseUnread = 0;
                 for (const conv of nurseConvos) {
                     const msgs = await chatService.getConversationMessages(conv.conversation_id);
                     const unreadMsgs = msgs.filter(m => m.receiver_id === doctor.id && !m.read);
+                    totalNurseUnread += unreadMsgs.length;
                     if (unreadMsgs.length > 0) {
                         const lastUnread = unreadMsgs[unreadMsgs.length - 1];
                         if (!notifiedNurseMessagesRef.current.has(lastUnread._id)) {
@@ -634,6 +637,7 @@ export const DoctorDashboard: React.FC = () => {
                         }
                     }
                 }
+                setNurseUnreadCount(totalNurseUnread);
             } catch (err) {
                 console.error('Failed to poll nurse conversations:', err);
             }
@@ -657,7 +661,7 @@ export const DoctorDashboard: React.FC = () => {
         { name: 'Patients', icon: <PatientListIcon />, onClick: () => { setActiveTab('Patients'); setSelectedPatient(null); } },
         { name: 'Appointments', icon: <div className="relative"><AppointmentIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${newAppointmentCount > 0 ? 'opacity-100' : 'opacity-0'}`}>{newAppointmentCount}</span></div>, onClick: () => { setActiveTab('Appointments'); setSelectedPatient(null); setNewAppointmentCount(0); } },
         { name: 'Messages', icon: <div className="relative"><MessageIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${totalUnread > 0 ? 'opacity-100' : 'opacity-0'}`}>{totalUnread}</span></div>, onClick: () => { setActiveTab('Messages'); setSelectedPatient(null); } },
-        { name: 'Nurse Chat', icon: <NurseChatIcon />, onClick: () => { setActiveTab('Nurse Chat'); setSelectedPatient(null); } },
+        { name: 'Nurse Chat', icon: <div className="relative"><NurseChatIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${nurseUnreadCount > 0 ? 'opacity-100' : 'opacity-0'}`}>{nurseUnreadCount}</span></div>, onClick: () => { setActiveTab('Nurse Chat'); setSelectedPatient(null); setNurseUnreadCount(0); } },
         { name: 'Alerts', icon: <div className="relative"><AlertIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${doctorUnreadCount > 0 ? 'opacity-100' : 'opacity-0'}`}>{doctorUnreadCount}</span></div>, onClick: () => { setActiveTab('Alerts'); setSelectedPatient(null); markAllRead(); } },
         { name: 'Profile', icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>, onClick: () => { setActiveTab('Profile'); setSelectedPatient(null); } }
     ];
