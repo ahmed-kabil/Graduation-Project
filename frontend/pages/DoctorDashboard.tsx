@@ -209,7 +209,7 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
           {selectedPatient ? (
             <>
               <div className="p-4 border-b dark:border-slate-700 flex items-center flex-shrink-0">
-                <button onClick={() => setSelectedPatient(null)} className="sm:hidden mr-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                <button onClick={() => setSelectedPatient(null)} className="sm:hidden mr-4 p-3 rounded-full text-2xl text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700">
                   &larr;
                 </button>
                 <h3 className="text-xl font-semibold text-slate-800 dark:text-white truncate">Chat with {selectedPatient.name}</h3>
@@ -422,7 +422,7 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
           {selectedNurseConvo ? (
             <>
               <div className="p-4 border-b dark:border-slate-700 flex items-center flex-shrink-0">
-                <button onClick={() => setSelectedNurseConvo(null)} className="sm:hidden mr-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">&larr;</button>
+                <button onClick={() => setSelectedNurseConvo(null)} className="sm:hidden mr-4 p-3 rounded-full text-2xl text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700">&larr;</button>
                 <h3 className="text-xl font-semibold text-slate-800 dark:text-white truncate">Chat with Nurse {selectedNurseConvo.nurse_name}</h3>
               </div>
               <div className="flex-1 p-4 sm:p-6 overflow-y-auto overscroll-contain space-y-4">

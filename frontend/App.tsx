@@ -23,7 +23,7 @@ const App: React.FC = () => {
       {user && (user.role === Role.Doctor || user.role === Role.Nurse) && <NotificationPermissionBanner />}
       {(() => {
         if (isLoading) {
-          return <div className="flex items-center justify-center h-screen bg-slate-100 text-slate-800">Loading...</div>;
+          return <div className="flex items-center justify-center h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-white">Loading...</div>;
         }
 
         if (!user) {

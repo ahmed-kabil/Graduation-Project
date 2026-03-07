@@ -28,7 +28,7 @@ const VitalsCard: React.FC<{ vital: VitalSign }> = ({ vital }) => {
             {isCritical && (
                 <div className="absolute -inset-0.5 bg-red-500 rounded-xl blur opacity-75 animate-pulse"></div>
             )}
-            <div className={`relative bg-gradient-to-br from-white to-slate-50 p-6 rounded-xl shadow-lg flex items-center transition-all duration-300 border-4 group-hover:shadow-2xl group-hover:[transform:translateZ(10px)_scale(1.02)] ${isCritical ? 'border-red-500' : 'border-transparent'}`}>
+            <div className={`relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 p-6 rounded-xl shadow-lg flex items-center transition-all duration-300 border-4 group-hover:shadow-2xl group-hover:[transform:translateZ(10px)_scale(1.02)] ${isCritical ? 'border-red-500' : 'border-transparent'}`}>
                 <div className="mr-5">{icons[vital.name]}</div>
                 <div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{vital.name}</p>
@@ -100,14 +100,14 @@ export const PatientDetailView: React.FC<{ patient: Patient; onBack: () => void;
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Patient Information</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <div className="flex items-center gap-4">
-                        <div className="bg-indigo-100 p-3 rounded-full"><CalendarIcon /></div>
+                        <div className="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-full"><CalendarIcon /></div>
                         <div>
                             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Age</p>
                             <p className="text-xl font-semibold text-slate-800 dark:text-white">{patient.age}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="bg-pink-100 p-3 rounded-full"><GenderIcon /></div>
+                        <div className="bg-pink-100 dark:bg-pink-900/30 p-3 rounded-full"><GenderIcon /></div>
                         <div>
                             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Gender</p>
                             <p className="text-xl font-semibold text-slate-800 dark:text-white">{patient.gender}</p>

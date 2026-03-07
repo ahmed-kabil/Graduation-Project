@@ -109,13 +109,13 @@ export const DoctorAppointmentsView: React.FC<DoctorAppointmentsViewProps> = ({ 
                                                     <p className="text-sm text-slate-600 dark:text-slate-400 mt-1"><strong>Reason:</strong> {app.reason}</p>
                                                 </button>
                                                 <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                                    <div className="flex items-center text-sm font-medium bg-sky-100 text-sky-700 px-3 py-1 rounded-full">
+                                                    <div className="flex items-center text-sm font-medium bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 px-3 py-1 rounded-full">
                                                         <ClockIcon />
                                                         {app.time}
                                                     </div>
                                                     <button
                                                         onClick={() => handleFulfill(app._id)}
-                                                        className="flex items-center gap-1 text-xs font-medium bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full hover:bg-emerald-200 transition"
+                                                        className="flex items-center gap-1 text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 rounded-full hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition"
                                                         title="Mark as fulfilled"
                                                     >
                                                         <CheckIcon />

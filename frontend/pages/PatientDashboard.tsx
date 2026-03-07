@@ -102,7 +102,7 @@ const VitalsDisplay: React.FC<{patient: Patient}> = ({ patient }) => {
     const healthStatus = vitals.every(v => v.thresholds && v.value >= v.thresholds.min && v.value <= v.thresholds.max)
         ? "All your vitals are looking great!"
         : "Some of your vitals are outside the normal range. Your doctor has been notified.";
-    const statusColor = healthStatus.includes("great") ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700';
+    const statusColor = healthStatus.includes("great") ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400';
 
     return (
         <div className="space-y-6">
@@ -375,7 +375,7 @@ const DoctorChatModal: React.FC<{
         `}</style>
         <header className="p-4 border-b dark:border-slate-700 flex items-center justify-between flex-shrink-0">
           <h3 className="text-xl font-semibold text-slate-800 dark:text-white">Chat with {doctor.name}</h3>
-          <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
+          <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white text-3xl font-light">&times;</button>
         </header>
         <div className="flex-1 p-6 overflow-y-auto space-y-4">
           {messages.map((msg, idx) => {

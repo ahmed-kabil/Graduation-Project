@@ -12,8 +12,8 @@ const GENDER_COLORS = ['#38bdf8', '#f472b6', '#a78bfa']; // Sky, Pink, Violet
 const CASE_COLORS = ['#34d399', '#fbbf24', '#60a5fa', '#c084fc']; // Emerald, Amber, Blue, Purple
 
 const ChartCard: React.FC<{ title: string; children: React.ReactNode, className?: string }> = ({ title, children, className = '' }) => (
-    <div className={`bg-white p-6 rounded-xl shadow-md ${className}`}>
-        <h3 className="text-xl font-semibold text-slate-800 mb-4">{title}</h3>
+    <div className={`bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md ${className}`}>
+        <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">{title}</h3>
         {children}
     </div>
 );
@@ -29,13 +29,14 @@ export const ManagementDashboard: React.FC = () => {
         { name: 'Analytics', icon: <AnalyticsIcon />, onClick: () => {} },
     ];
     
-    const tickColor = '#6b7280';
+    const isDark = document.documentElement.classList.contains('dark');
+    const tickColor = isDark ? '#94a3b8' : '#6b7280';
     const tooltipStyles = {
         contentStyle: { 
-            backgroundColor: '#ffffff',
-            border: '1px solid #e2e8f0',
+            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
         },
-        labelStyle: { color: '#1e293b' }
+        labelStyle: { color: isDark ? '#f1f5f9' : '#1e293b' }
     };
 
 
@@ -53,7 +54,7 @@ export const ManagementDashboard: React.FC = () => {
                 <ChartCard title="Total Patient Count" className="lg:col-span-2">
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={data.totalPatients}>
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-slate-300"/>
+                            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e2e8f0'}/>
                             <XAxis dataKey="month" tick={{ fill: tickColor }} />
                             <YAxis tick={{ fill: tickColor }}/>
                             <Tooltip {...tooltipStyles} />
@@ -66,7 +67,7 @@ export const ManagementDashboard: React.FC = () => {
                 <ChartCard title="Alert Statistics (Last Week)">
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={data.alertStatistics}>
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-slate-300"/>
+                            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e2e8f0'}/>
                             <XAxis dataKey="day" tick={{ fill: tickColor }}/>
                             <YAxis tick={{ fill: tickColor }}/>
                             <Tooltip {...tooltipStyles} />

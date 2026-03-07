@@ -9,6 +9,14 @@ const ChevronRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className
 
 const AVAILABLE_TIMES = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
 
+/** Format a Date as YYYY-MM-DD using LOCAL year/month/day (avoids UTC shift from toISOString). */
+const toLocalDateString = (d: Date): string => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+};
+
 export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }) => {
     const [doctor, setDoctor] = useState<Doctor | null>(null);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -37,7 +45,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
     
     useEffect(() => {
         if (selectedDate && doctor) {
-            const dateString = selectedDate.toISOString().split('T')[0];
+            const dateString = toLocalDateString(selectedDate);
             appointmentService.getBookedTimes(doctor.id, dateString).then(setBookedTimes);
             setSelectedTime(null);
         }
@@ -62,7 +70,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
         const appointmentData: BookAppointmentData = {
             patient_id: patient.id,
             doctor_id: doctor.id,
-            date: selectedDate.toISOString().split('T')[0],
+            date: toLocalDateString(selectedDate),
             time: selectedTime,
             reason: reason.trim(),
         };
@@ -77,7 +85,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
             fetchAppointments();
             setSelectedTime(null);
             setReason('');
-            const dateString = selectedDate.toISOString().split('T')[0];
+            const dateString = toLocalDateString(selectedDate);
             appointmentService.getBookedTimes(doctor.id, dateString).then(setBookedTimes);
         } catch (e: any) {
             setError(e.message);
@@ -109,13 +117,13 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
 
             // Refresh booked times for the currently-selected date so the freed slot reappears
             if (doctor && selectedDate) {
-                const dateString = selectedDate.toISOString().split('T')[0];
+                const dateString = toLocalDateString(selectedDate);
                 appointmentService.getBookedTimes(doctor.id, dateString).then(setBookedTimes);
             }
             // Also refresh if the cancelled appointment's date matches the selected date
             if (doctor && cancelledApp) {
                 const cancelledDate = cancelledApp.date.includes('T') ? cancelledApp.date.split('T')[0] : cancelledApp.date;
-                const selectedDateStr = selectedDate ? selectedDate.toISOString().split('T')[0] : '';
+                const selectedDateStr = selectedDate ? toLocalDateString(selectedDate) : '';
                 if (cancelledDate === selectedDateStr) {
                     appointmentService.getBookedTimes(doctor.id, cancelledDate).then(setBookedTimes);
                 }
@@ -156,7 +164,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
             } else if (isSelected) {
                 dayClass += " bg-blue-600 text-white font-bold shadow-lg transform scale-105";
             } else if (isToday) {
-                dayClass += " bg-blue-100 text-blue-700 font-semibold";
+                dayClass += " bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold";
             } else {
                 dayClass += " text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700";
             }
@@ -177,7 +185,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
                 <div className="flex items-center justify-between mb-4">
                     <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"><ChevronLeftIcon /></button>
-                    <h3 className="font-semibold text-lg">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
+                    <h3 className="font-semibold text-lg text-slate-800 dark:text-white">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
                     <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"><ChevronRightIcon /></button>
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-500 dark:text-slate-400 mb-2">
@@ -219,7 +227,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                     {renderCalendar()}
                     {selectedDate && (
                         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
-                            <h3 className="font-semibold mb-4">Available Slots for {selectedDate.toLocaleDateString()}</h3>
+                            <h3 className="font-semibold mb-4 text-slate-800 dark:text-white">Available Slots for {selectedDate.toLocaleDateString()}</h3>
                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                 {AVAILABLE_TIMES.map(time => {
                                     const isBooked = bookedTimes.includes(time);
@@ -227,7 +235,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                                     // Disable slots that have already passed when the selected date is today
                                     const now = new Date();
                                     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-                                    const selectedDateStr = selectedDate ? selectedDate.toISOString().split('T')[0] : '';
+                                    const selectedDateStr = selectedDate ? toLocalDateString(selectedDate) : '';
                                     const isToday = selectedDateStr === todayStr;
                                     const isPastSlot = isToday && (() => {
                                         const [h, m] = time.split(':').map(Number);
@@ -257,7 +265,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                     )}
                     {selectedTime && (
                         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
-                             <h3 className="font-semibold mb-2">Book for {selectedTime} on {selectedDate?.toLocaleDateString()}</h3>
+                             <h3 className="font-semibold mb-2 text-slate-800 dark:text-white">Book for {selectedTime} on {selectedDate?.toLocaleDateString()}</h3>
                              <textarea 
                                 value={reason} 
                                 onChange={(e) => setReason(e.target.value)} 
@@ -282,7 +290,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                                         <CalendarIcon />
                                         <span>{new Date(appDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })} at {app.time}</span>
                                     </div>
-                                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Booked</span>
+                                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">Booked</span>
                                  </div>
                                  {doctor && <p className="text-sm text-slate-600 dark:text-slate-400 pl-7 mb-1"><strong>Doctor:</strong> {doctor.name}</p>}
                                 <p className="text-sm text-slate-600 dark:text-slate-400 pl-7 mb-2"><strong>Reason:</strong> {app.reason}</p>

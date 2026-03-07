@@ -72,7 +72,7 @@ const DoctorIcon = () => (
 const PieTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
+            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
                 <p className="text-sm font-bold" style={{ color: payload[0].payload.fill }}>
                     {payload[0].name}
                 </p>
@@ -92,7 +92,7 @@ const PieTooltip = ({ active, payload }: any) => {
 const BarTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
+            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
                 <p className="text-sm font-bold text-slate-800 dark:text-white">{label}</p>
                 <p className="text-sm text-indigo-600 font-medium">
                     Patients: {payload[0].value}
@@ -192,7 +192,7 @@ export const ReceptionistStats: React.FC = () => {
                             <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Total Patients</p>
                             <p className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mt-1">{totalPatients}</p>
                         </div>
-                        <div className="bg-blue-100 p-2 sm:p-3 rounded-full text-blue-600">
+                        <div className="bg-blue-100 dark:bg-blue-900/30 p-2 sm:p-3 rounded-full text-blue-600 dark:text-blue-400">
                             <UsersIcon />
                         </div>
                     </div>
@@ -208,7 +208,7 @@ export const ReceptionistStats: React.FC = () => {
                                 {totalPatients > 0 ? ((maleCount / totalPatients) * 100).toFixed(1) : 0}% of total
                             </p>
                         </div>
-                        <div className="bg-sky-100 p-2 sm:p-3 rounded-full text-sky-600">
+                        <div className="bg-sky-100 dark:bg-sky-900/30 p-2 sm:p-3 rounded-full text-sky-600 dark:text-sky-400">
                             <MaleIcon />
                         </div>
                     </div>
@@ -224,7 +224,7 @@ export const ReceptionistStats: React.FC = () => {
                                 {totalPatients > 0 ? ((femaleCount / totalPatients) * 100).toFixed(1) : 0}% of total
                             </p>
                         </div>
-                        <div className="bg-pink-100 p-2 sm:p-3 rounded-full text-pink-600">
+                        <div className="bg-pink-100 dark:bg-pink-900/30 p-2 sm:p-3 rounded-full text-pink-600 dark:text-pink-400">
                             <FemaleIcon />
                         </div>
                     </div>

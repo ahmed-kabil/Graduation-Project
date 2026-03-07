@@ -101,13 +101,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, sidebarItems, activeIt
             <div className="flex items-center">
               <div className="text-right mr-2 sm:mr-4">
                 <p className="font-semibold text-slate-700 dark:text-slate-200 hidden sm:block">{user?.name}</p>
-                {user && (user.role === Role.Doctor || user.role === Role.Nurse || user.role === Role.Receptionist) ? (
-                    <p className={`text-sm font-medium ${getRoleColor(user?.role)}`}>{capitalize(user?.role)} &bull; <span className="font-mono text-xs align-baseline">{user.id}</span></p>
-                ) : user && user.role === Role.Patient ? (
-                    <p className={`text-sm font-medium ${getRoleColor(user?.role)}`}>{capitalize(user?.role)} &bull; <span className="font-mono text-xs align-baseline">Device: {(user as any).deviceId}</span></p>
-                ) : (
-                    <p className={`text-sm font-medium ${getRoleColor(user?.role)}`}>{capitalize(user?.role)}</p>
-                )}
               </div>
               <div className="hidden sm:block">
                   <UserIcon />
