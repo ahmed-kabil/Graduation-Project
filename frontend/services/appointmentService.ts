@@ -99,11 +99,11 @@ export const appointmentService = {
   },
 
   /**
-   * DELETE /api/appointments/{_id}
+   * PATCH /api/appointments/{_id}/cancel — soft-cancel (sets status to "cancelled")
    */
-  cancelAppointment: async (appointmentId: string): Promise<boolean> => {
-    await apiRequest(`/appointments/${appointmentId}`, { method: 'DELETE' });
-    return true;
+  cancelAppointment: async (appointmentId: string): Promise<Appointment> => {
+    const res = await apiRequest(`/appointments/${appointmentId}/cancel`, { method: 'PATCH' });
+    return res.data?.appointment || res.data;
   },
 
   /**

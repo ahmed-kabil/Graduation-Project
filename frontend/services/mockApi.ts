@@ -136,9 +136,10 @@ export const api = {
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        // Handle both 'message' and 'data' fields for backwards compatibility
         const errorMessage = errorData.message || errorData.data || 'Invalid email or password.';
-        throw new Error(errorMessage);
+        const err: any = new Error(errorMessage);
+        err.field = errorData.field || null;
+        throw err;
     }
 
     const json = await response.json();

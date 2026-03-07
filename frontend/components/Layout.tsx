@@ -47,7 +47,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, sidebarItems, activeIt
 
   return (
     <>
-      <div className="flex h-screen bg-slate-100 overflow-hidden">
+      <div className="flex h-screen bg-slate-100 dark:bg-slate-900 overflow-hidden">
         {/* Overlay for mobile */}
         {isSidebarOpen && (
           <div 
@@ -89,18 +89,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, sidebarItems, activeIt
         {/* Main Content */}
         <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${isSidebarOpen ? 'lg:scale-100 lg:blur-none scale-95 blur-sm' : ''}`}>
           {/* Header */}
-          <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-8">
+          <header className="h-20 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 sm:px-8">
             <div className="flex items-center">
-               <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden mr-4 text-slate-600">
+               <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden mr-4 text-slate-600 dark:text-slate-300">
                   <MenuIcon />
                </button>
-              <h2 className="text-xl sm:text-2xl font-semibold text-slate-800">
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-800 dark:text-white">
                 {capitalize(user?.role)} Dashboard
               </h2>
             </div>
             <div className="flex items-center">
               <div className="text-right mr-2 sm:mr-4">
-                <p className="font-semibold text-slate-700 hidden sm:block">{user?.name}</p>
+                <p className="font-semibold text-slate-700 dark:text-slate-200 hidden sm:block">{user?.name}</p>
                 {user && (user.role === Role.Doctor || user.role === Role.Nurse || user.role === Role.Receptionist) ? (
                     <p className={`text-sm font-medium ${getRoleColor(user?.role)}`}>{capitalize(user?.role)} &bull; <span className="font-mono text-xs align-baseline">{user.id}</span></p>
                 ) : user && user.role === Role.Patient ? (
@@ -112,7 +112,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, sidebarItems, activeIt
               <div className="hidden sm:block">
                   <UserIcon />
               </div>
-              <button onClick={() => setShowLogoutConfirm(true)} className="ml-2 sm:ml-6 flex items-center text-slate-500 hover:text-red-500 transition-colors">
+              <button onClick={() => setShowLogoutConfirm(true)} className="ml-2 sm:ml-6 flex items-center text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors">
                   <LogoutIcon/>
                   <span className="hidden sm:inline ml-2 text-sm font-medium">Logout</span>
               </button>
@@ -120,7 +120,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, sidebarItems, activeIt
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-100 p-4 sm:p-8">
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-100 dark:bg-slate-900 p-4 sm:p-8">
             {children}
           </main>
         </div>
@@ -134,7 +134,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, sidebarItems, activeIt
             role="dialog"
             aria-modal="true"
         >
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm transform transition-all animate-fade-in-scale">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-sm transform transition-all animate-fade-in-scale">
             <style>{`
                 @keyframes fade-in-scale {
                     from { transform: scale(0.95); opacity: 0; }
@@ -143,15 +143,15 @@ export const Layout: React.FC<LayoutProps> = ({ children, sidebarItems, activeIt
                 .animate-fade-in-scale { animation: fade-in-scale 0.2s forwards cubic-bezier(0.16, 1, 0.3, 1); }
             `}</style>
             <div className="p-6">
-                <h3 id="logout-title" className="text-lg font-semibold text-slate-900">Confirm Logout</h3>
-                <p className="mt-2 text-sm text-slate-600">
+                <h3 id="logout-title" className="text-lg font-semibold text-slate-900 dark:text-white">Confirm Logout</h3>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                     Are you sure you want to log out?
                 </p>
             </div>
-            <div className="bg-slate-50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
+            <div className="bg-slate-50 dark:bg-slate-700 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
                 <button
                     type="button"
-                    className="px-4 py-2 text-sm font-medium text-slate-700 bg-white rounded-md border border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-600 rounded-md border border-slate-300 dark:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     onClick={() => setShowLogoutConfirm(false)}
                 >
                     No

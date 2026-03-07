@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useCallback, useRef } from 'react';
 
 export interface ToastMessage {
   id: number;
@@ -15,12 +15,15 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
+let toastIdCounter = 0;
+
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const addToast = useCallback((message: string, type: ToastMessage['type'] = 'info', onClick?: () => void) => {
+    toastIdCounter += 1;
     const newToast: ToastMessage = {
-      id: Date.now(),
+      id: toastIdCounter,
       message,
       type,
       onClick,

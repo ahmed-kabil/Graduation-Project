@@ -10,6 +10,11 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <title>Al Zohor Hospital</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
     <style>
       /* Safe area padding for devices with notches */
       :root {
@@ -35,7 +40,7 @@
       }
     </style>
   </head>
-  <body class="bg-slate-50">
+  <body class="bg-slate-50 dark:bg-slate-900">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

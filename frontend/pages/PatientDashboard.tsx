@@ -10,6 +10,7 @@ import { AppointmentScheduler } from '../components/AppointmentScheduler';
 import { useNotification } from '../context/NotificationContext';
 import { socketService, SocketMessage } from '../services/socketService';
 import { chatService } from '../services/chatService';
+import { ProfilePage } from '../components/ProfilePage';
 import { getDateLabel, dateKey } from '../services/dateLabelUtils';
 
 // Icons
@@ -518,7 +519,8 @@ export const PatientDashboard: React.FC = () => {
         { name: 'Vitals', icon: <VitalsIcon/>, onClick: () => setActiveTab('Vitals') },
         { name: 'Appointments', icon: <AppointmentIcon/>, onClick: () => setActiveTab('Appointments') },
         { name: 'Chatbot', icon: <ChatbotIcon/>, onClick: () => setActiveTab('Chatbot') },
-        { name: 'Doctor Info', icon: <DoctorIcon/>, onClick: () => setActiveTab('Doctor Info') }
+        { name: 'Doctor Info', icon: <DoctorIcon/>, onClick: () => setActiveTab('Doctor Info') },
+        { name: 'Profile', icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>, onClick: () => setActiveTab('Profile') }
     ];
 
     const renderContent = () => {
@@ -531,6 +533,8 @@ export const PatientDashboard: React.FC = () => {
                 return <Chatbot />;
             case 'Doctor Info':
                 return <DoctorInfo patient={patient} doctor={doctor} isChatOpen={isChatOpen} onOpenChat={() => setIsChatOpen(true)} onCloseChat={() => setIsChatOpen(false)} />;
+            case 'Profile':
+                return <ProfilePage />;
             default:
                 return <VitalsDisplay patient={patient}/>;
         }

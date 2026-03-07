@@ -6,6 +6,21 @@ const Appointment = require("../models/appointment-model");
 const createAppointment = async (req, res) => {
   try {
     const { patient_id, doctor_id, date, time, reason } = req.body;
+
+    // Prevent double-booking: check if a booked appointment already exists for this doctor+date+time
+    const existing = await Appointment.findOne({
+      doctor_id,
+      date: new Date(date),
+      time,
+      status: "booked",
+    });
+    if (existing) {
+      return res.status(409).json({
+        status: "fail",
+        message: "This time slot is already booked.",
+      });
+    }
+
     const appointment = new Appointment({
       patient_id,
       doctor_id,
@@ -65,7 +80,26 @@ const markAppointmentAsFulfilled = async (req, res) => {
 };
 
 /**
- * Delete an appointment
+ * Cancel an appointment (soft-delete — sets status to "cancelled")
+ */
+const cancelAppointment = async (req, res) => {
+  try {
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.appo_id,
+      { status: "cancelled" },
+      { new: true }
+    );
+    if (!appointment) {
+      return res.status(404).json({ status: "fail", message: "Appointment not found" });
+    }
+    res.status(200).json({ status: "success", data: { appointment } });
+  } catch (err) {
+    res.status(400).json({ status: "error", message: err.message });
+  }
+};
+
+/**
+ * Delete an appointment (hard delete — kept for admin use)
  */
 const deleteAppointment = async (req, res) => {
   try {
@@ -84,5 +118,6 @@ module.exports = {
   getDocAppointment,
   getPatAppointment,
   markAppointmentAsFulfilled,
+  cancelAppointment,
   deleteAppointment,
 };

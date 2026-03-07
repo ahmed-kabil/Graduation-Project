@@ -4,6 +4,7 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { AlertProvider } from './context/AlertContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { initMobileApp } from './services/mobileInit';
 
 // Initialize mobile features (no-op on web)
@@ -17,12 +18,14 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <AuthProvider>
-      <NotificationProvider>
-        <AlertProvider>
-          <App />
-        </AlertProvider>
-      </NotificationProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <NotificationProvider>
+          <AlertProvider>
+            <App />
+          </AlertProvider>
+        </NotificationProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );

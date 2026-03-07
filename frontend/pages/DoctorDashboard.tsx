@@ -8,6 +8,7 @@ import { PatientDetailView } from '../components/PatientDetailView';
 import { appointmentService } from '../services/appointmentService';
 import { useNotification } from '../context/NotificationContext';
 import { useAlert } from '../context/AlertContext';
+import { ProfilePage } from '../components/ProfilePage';
 import { socketService, SocketMessage } from '../services/socketService';
 import { chatService, DocNurConversation } from '../services/chatService';
 import { getDateLabel, dateKey } from '../services/dateLabelUtils';
@@ -484,6 +485,7 @@ export const DoctorDashboard: React.FC = () => {
     const { addToast } = useNotification();
     const { alerts, unreadCount, markAllRead, dismissAlert, isAlertRead } = useAlert();
     const notifiedMessagesRef = useRef<Set<string>>(new Set());
+    const [dismissingAlertIds, setDismissingAlertIds] = useState<Set<string>>(new Set());
     
     const doctor = user as Doctor;
     
@@ -570,7 +572,8 @@ export const DoctorDashboard: React.FC = () => {
         { name: 'Appointments', icon: <div className="relative"><AppointmentIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${newAppointmentCount > 0 ? 'opacity-100' : 'opacity-0'}`}>{newAppointmentCount}</span></div>, onClick: () => { setActiveTab('Appointments'); setSelectedPatient(null); setNewAppointmentCount(0); } },
         { name: 'Messages', icon: <div className="relative"><MessageIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${totalUnread > 0 ? 'opacity-100' : 'opacity-0'}`}>{totalUnread}</span></div>, onClick: () => { setActiveTab('Messages'); setSelectedPatient(null); } },
         { name: 'Nurse Chat', icon: <NurseChatIcon />, onClick: () => { setActiveTab('Nurse Chat'); setSelectedPatient(null); } },
-        { name: 'Alerts', icon: <div className="relative"><AlertIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${doctorUnreadCount > 0 ? 'opacity-100' : 'opacity-0'}`}>{doctorUnreadCount}</span></div>, onClick: () => { setActiveTab('Alerts'); setSelectedPatient(null); markAllRead(); } }
+        { name: 'Alerts', icon: <div className="relative"><AlertIcon /><span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center transition-opacity ${doctorUnreadCount > 0 ? 'opacity-100' : 'opacity-0'}`}>{doctorUnreadCount}</span></div>, onClick: () => { setActiveTab('Alerts'); setSelectedPatient(null); markAllRead(); } },
+        { name: 'Profile', icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>, onClick: () => { setActiveTab('Profile'); setSelectedPatient(null); } }
     ];
 
     const renderPatientList = () => (
@@ -590,19 +593,35 @@ export const DoctorDashboard: React.FC = () => {
         </div>
     );
 
+    const handleDismissAlert = (alertId: string) => {
+        if (dismissingAlertIds.has(alertId)) return;
+        setDismissingAlertIds(prev => new Set(prev).add(alertId));
+        setTimeout(() => {
+            dismissAlert(alertId);
+            setDismissingAlertIds(prev => { const next = new Set(prev); next.delete(alertId); return next; });
+        }, 280);
+    };
+
     const renderAlerts = () => (
         <div className="bg-white rounded-xl shadow-md p-6">
+            <style>{`
+                @keyframes alert-fade-out {
+                    from { opacity: 1; transform: translateX(0); }
+                    to   { opacity: 0; transform: translateX(40px); }
+                }
+                .alert-dismissing { animation: alert-fade-out 280ms ease-in forwards; pointer-events: none; }
+            `}</style>
             <h3 className="text-xl font-semibold text-slate-800 mb-4">Critical Alerts ({doctorAlerts.length})</h3>
             <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto">
                 {doctorAlerts.length === 0 ? <p className="text-slate-500">No active alerts for your patients.</p> :
                  doctorAlerts.map(a => (
-                    <div key={a.id} className="p-4 rounded-lg bg-red-50 border border-red-200 flex items-start justify-between">
+                    <div key={a.id} className={`p-4 rounded-lg bg-red-50 border border-red-200 flex items-start justify-between transition-all ${dismissingAlertIds.has(a.id) ? 'alert-dismissing' : ''}`}>
                         <div>
                             <p className="font-bold text-red-700">{a.message}</p>
                             <p className="text-sm text-red-600">Patient: {a.patientName} | Value: {a.value}</p>
                             <p className="text-xs text-slate-500 mt-1">{a.timestamp.toLocaleString()}</p>
                         </div>
-                        <button onClick={() => dismissAlert(a.id)} className="ml-3 flex-shrink-0 p-1 rounded-full text-red-400 hover:text-red-700 hover:bg-red-100 transition" aria-label="Dismiss alert">
+                        <button onClick={(e) => { e.stopPropagation(); handleDismissAlert(a.id); }} className="ml-3 flex-shrink-0 p-1 rounded-full text-red-400 hover:text-red-700 hover:bg-red-100 transition" aria-label="Dismiss alert">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
@@ -616,6 +635,7 @@ export const DoctorDashboard: React.FC = () => {
         if (activeTab === 'Messages') return <MessagingView doctor={doctor} initialPatientId={autoSelectPatientId} />;
         if (activeTab === 'Nurse Chat') return <NurseMessagingView doctor={doctor} />;
         if (activeTab === 'Alerts') return renderAlerts();
+        if (activeTab === 'Profile') return <ProfilePage />;
 
         if (selectedPatient) {
             return <PatientDetailView patient={selectedPatient} onBack={() => setSelectedPatient(null)} />;

@@ -43,20 +43,20 @@ const authUser = async (req, res) => {
     
     const user = await Login.findOne({ email: email });
 
-    // SECURITY: Use generic error message - don't reveal if user exists or password is wrong
     if (!user) {
       return res.status(401).json({ 
         status: "fail", 
-        message: "Invalid email or password." 
+        message: "Invalid email address.",
+        field: "email"
       });
     }
     
     const password_matched = await bcrypt.compare(password, user.password);
     if (!password_matched) {
-      // SECURITY: Same generic error message for wrong password
       return res.status(401).json({ 
         status: "fail", 
-        message: "Invalid email or password." 
+        message: "Incorrect password.",
+        field: "password"
       });
     }
 

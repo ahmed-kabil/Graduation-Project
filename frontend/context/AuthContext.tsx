@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   error: string | null;
+  errorField: 'email' | 'password' | null;
   clearError: () => void;
 }
 
@@ -18,6 +19,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true); // Start true to check storage
   const [error, setError] = useState<string | null>(null);
+  const [errorField, setErrorField] = useState<'email' | 'password' | null>(null);
 
   useEffect(() => {
     try {
@@ -38,6 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
+    setErrorField(null);
     try {
       const userData = await api.login(email, password);
 
@@ -56,6 +59,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (e: any) {
       console.error("Login failed:", e);
       setError(e.message || "An unexpected error occurred during login.");
+      setErrorField(e.field || null);
       return false;
     } finally {
       setIsLoading(false);
@@ -70,13 +74,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const clearError = useCallback(() => {
     setError(null);
+    setErrorField(null);
   }, []);
 
 // console.log(user)
 
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, error, clearError }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, error, errorField, clearError }}>
       {children}
     </AuthContext.Provider>
   );
