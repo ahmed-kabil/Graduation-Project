@@ -1,4 +1,5 @@
 const { DocPatConversation, DocNurConversation } = require("../models/conversations-model");
+const Message = require("../models/messages-model");
 
 /**
  * Get a doctor's conversations with patients
@@ -42,4 +43,32 @@ const getNurConversationsWithDoc = async (req, res) => {
   }
 };
 
-module.exports = { getDocConversationsWithPat, getDocConversationsWithNur, getNurConversationsWithDoc };
+/**
+ * Delete a doctor-patient conversation and all its messages
+ */
+const deleteDocPatConversation = async (req, res) => {
+  try {
+    const { conversation_id } = req.params;
+    await DocPatConversation.deleteOne({ conversation_id });
+    await Message.deleteMany({ conversation_id });
+    res.status(200).json({ status: "success", data: null });
+  } catch (err) {
+    res.status(400).json({ status: "error", message: err.message });
+  }
+};
+
+/**
+ * Delete a doctor-nurse conversation and all its messages
+ */
+const deleteDocNurConversation = async (req, res) => {
+  try {
+    const { conversation_id } = req.params;
+    await DocNurConversation.deleteOne({ conversation_id });
+    await Message.deleteMany({ conversation_id });
+    res.status(200).json({ status: "success", data: null });
+  } catch (err) {
+    res.status(400).json({ status: "error", message: err.message });
+  }
+};
+
+module.exports = { getDocConversationsWithPat, getDocConversationsWithNur, getNurConversationsWithDoc, deleteDocPatConversation, deleteDocNurConversation };

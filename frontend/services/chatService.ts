@@ -153,4 +153,20 @@ export const chatService = {
   countUnreadMessages: (messages: Message[], userId: string): number => {
     return messages.filter(msg => msg.receiver_id === userId && !msg.read).length;
   },
+
+  /**
+   * Delete a doctor-patient conversation and all its messages
+   * DELETE /api/conversations/doc-pat/{conversation_id}
+   */
+  deleteDocPatConversation: async (conversationId: string): Promise<void> => {
+    await apiRequest(`/conversations/doc-pat/${conversationId}`, { method: 'DELETE' });
+  },
+
+  /**
+   * Delete a doctor-nurse conversation and all its messages
+   * DELETE /api/conversations/doc-nur/{conversation_id}
+   */
+  deleteDocNurConversation: async (conversationId: string): Promise<void> => {
+    await apiRequest(`/conversations/doc-nur/${conversationId}`, { method: 'DELETE' });
+  },
 };

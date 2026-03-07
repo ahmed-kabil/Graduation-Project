@@ -9,7 +9,12 @@ from langchain.memory import ConversationBufferWindowMemory
 from dotenv import load_dotenv
 from src.prompt import *
 import os
+import logging
 from pinecone import Pinecone
+
+# ─── Logging ──────────────────────────────────────────────────────────────────
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 load_dotenv()
@@ -19,14 +24,13 @@ PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# ✅ التعديل هنا: مش needed environment parameter مع الـ new client
+# ─── Pinecone client ─────────────────────────────────────────────────────────
 pc = Pinecone(
     api_key=PINECONE_API_KEY,
-    environment="aped-4627-b74a"  # أو أي environment تبعك
-) # environment مش مطلوب هنا
+    environment="aped-4627-b74a"
+)
 
-# Check if index exists
-print("Available indexes:", pc.list_indexes().names())  # للـ debugging
+logger.info("Available Pinecone indexes: %s", pc.list_indexes().names())
 
 if "medical-chatbot" not in pc.list_indexes().names():
     raise ValueError("Index 'medical-chatbot' not found! Available indexes: {}".format(pc.list_indexes().names()))
@@ -39,25 +43,28 @@ docsearch = PineconeVectorStore.from_existing_index(
     embedding=embeddings
 )
 
-# باقي الكود كما هو...
+# ─── Retriever: k=5 for broader medical context ──────────────────────────────
+retriever = docsearch.as_retriever(
+    search_type="similarity",
+    search_kwargs={"k": 5}
+)
 
-retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
-
-# ✅ Chat model using Groq (higher free-tier rate limits than Google Gemini)
+# ─── Chat model using Groq ───────────────────────────────────────────────────
 chatModel = ChatGroq(
     model="llama-3.1-8b-instant",
     temperature=0.3,
+    max_tokens=1024,
     api_key=GROQ_API_KEY,
 )
 
-# ✅ Conversation memory: remembers the last 3 interactions only
+# ─── Conversation memory: last 5 exchanges ───────────────────────────────────
 memory = ConversationBufferWindowMemory(
     memory_key="chat_history",
     return_messages=True,
-    k=3
+    k=5
 )
 
-# ✅ Prompt including previous conversation history
+# ─── Prompt template with RAG context + chat history ─────────────────────────
 prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt),
     ("placeholder", "{chat_history}"),
@@ -73,13 +80,20 @@ def index():
 
 @app.route("/get", methods=["GET", "POST"])
 def chat():
-    msg = request.form["msg"]
-    print("User:", msg)
+    msg = request.form.get("msg", "").strip()
 
-    # 🧠 تحميل المحادثة السابقة من الذاكرة
+    # Input validation
+    if not msg:
+        return "Please enter a message."
+
+    if len(msg) > 2000:
+        return "Your message is too long. Please keep it under 2000 characters."
+
+    logger.info("User: %s", msg)
+
+    # Load previous conversation from memory
     previous_context = memory.load_memory_variables({})
 
-    # استدعاء السلسلة مع المحادثة السابقة
     try:
         response = rag_chain.invoke({
             "input": msg,
@@ -87,14 +101,27 @@ def chat():
         })
 
         answer = response["answer"]
-        print("Response:", answer)
 
-        # 💾 حفظ السؤال والإجابة في الذاكرة
+        # Log retrieved sources for debugging
+        source_docs = response.get("context", [])
+        if source_docs:
+            logger.info("Retrieved %d chunks from vector DB", len(source_docs))
+            for i, doc in enumerate(source_docs):
+                src = doc.metadata.get("source", "unknown")
+                preview = doc.page_content[:80].replace("\n", " ")
+                logger.debug("  Chunk %d [%s]: %s...", i + 1, src, preview)
+        else:
+            logger.warning("No chunks retrieved from vector DB for query: %s", msg[:80])
+
+        logger.info("Response: %s", answer[:120])
+
+        # Save Q&A to memory
         memory.save_context({"input": msg}, {"output": answer})
 
         return str(answer)
+
     except Exception as e:
-        print(f"Error generating response: {e}")
+        logger.error("Error generating response: %s", e, exc_info=True)
         return "I'm sorry, I'm temporarily unable to process your request. Please try again in a moment."
 
 if __name__ == '__main__':

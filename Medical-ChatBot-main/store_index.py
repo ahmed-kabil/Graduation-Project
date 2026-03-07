@@ -28,13 +28,26 @@ os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 pc = Pinecone(api_key=PINECONE_API_KEY)
 index_name = "medical-chatbot"
 
+# FORCE_REINDEX: set to "true" to delete the existing index and re-ingest with updated chunking
+force_reindex = os.getenv("FORCE_REINDEX", "false").lower() == "true"
+
 # Check if index already exists using list_indexes()
 existing_indexes = pc.list_indexes()
 existing_index_names = {idx.name for idx in existing_indexes}
 
+if index_name in existing_index_names and force_reindex:
+    print(f"FORCE_REINDEX enabled — deleting existing index '{index_name}'...")
+    pc.delete_index(index_name)
+    # Wait for deletion to complete
+    import time
+    time.sleep(5)
+    print(f"Index '{index_name}' deleted. Will recreate with updated chunking.")
+    existing_index_names.discard(index_name)
+
 if index_name in existing_index_names:
     # Index already exists; avoid re-ingesting data to save startup time and RAM
     print(f"Index '{index_name}' already exists, skipping data upload.")
+    print(f"  (Set FORCE_REINDEX=true to delete and re-ingest with updated chunking)")
 else:
     print(f"Index '{index_name}' does not exist. Creating index and uploading data...")
 
@@ -50,6 +63,7 @@ else:
     extracted_data = load_pdf_files(data='data/')
     minimal_docs = filter_to_minimal_docs(extracted_data)
     text_chunks = text_split(minimal_docs)
+    print(f"Prepared {len(text_chunks)} chunks (chunk_size=700, overlap=70)")
 
     # Initialize embeddings only when needed
     embeddings = download_embeddings()
@@ -60,3 +74,4 @@ else:
         embedding=embeddings,
         index_name=index_name
     )
+    print(f"Successfully uploaded {len(text_chunks)} chunks to Pinecone.")

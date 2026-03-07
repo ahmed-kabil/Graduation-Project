@@ -20,6 +20,9 @@ fi
 # Check if data directory has PDF files and run indexing
 if [[ "$SKIP_INDEXING" == "false" ]] && ls /app/data/*.pdf 1> /dev/null 2>&1; then
     echo "📄 Found PDF files in /app/data/"
+    if [[ "${FORCE_REINDEX:-false}" == "true" ]]; then
+        echo "🔁 FORCE_REINDEX=true — will delete and recreate index with updated chunking"
+    fi
     echo "🔄 Running document indexing to Pinecone..."
     if python store_index.py; then
         echo "✅ Indexing complete!"
