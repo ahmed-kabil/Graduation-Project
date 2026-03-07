@@ -263,7 +263,7 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
                       )}
                       <div className={`flex items-end gap-2 ${msg.senderId === doctor.id ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] sm:max-w-lg px-4 py-3 rounded-2xl ${msg.senderId === doctor.id ? 'bg-sky-500 text-white rounded-br-none' : 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white rounded-bl-none'}`}>
-                          <p className="break-words" dir="auto">{msg.text}</p>
+                          <div className="break-words" dir="auto" style={{ unicodeBidi: 'plaintext', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.text}</div>
                           <div className="flex items-center justify-end gap-1 mt-1">
                             <p className="text-xs opacity-70">{msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                             {msg.senderId === doctor.id && (
@@ -494,7 +494,7 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
                       )}
                       <div className={`flex items-end gap-2 ${msg.senderId === doctor.id ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] sm:max-w-lg px-4 py-3 rounded-2xl ${msg.senderId === doctor.id ? 'bg-sky-500 text-white rounded-br-none' : 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white rounded-bl-none'}`}>
-                          <p className="break-words" dir="auto">{msg.text}</p>
+                          <div className="break-words" dir="auto" style={{ unicodeBidi: 'plaintext', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.text}</div>
                           <div className="flex items-center justify-end gap-1 mt-1">
                             <p className="text-xs opacity-70">{msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                             {msg.senderId === doctor.id && (
