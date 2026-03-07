@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../services/mockApi';
-import { Patient, VitalSign, Alert } from '../types';
+import { Patient, VitalSign, Alert, Role, LoggedInUser, Doctor } from '../types';
 import { useAlert } from '../context/AlertContext';
 import { useNotification } from '../context/NotificationContext';
 import { useAlertNotification } from '../hooks/useAlertNotification';
@@ -22,16 +22,27 @@ const vitalKeyMap: Record<string, VitalSign['name']> = {
     spo2: 'SpO2'
 };
 
-export const GlobalVitalsMonitor: React.FC = () => {
+interface GlobalVitalsMonitorProps {
+    user: LoggedInUser;
+}
+
+export const GlobalVitalsMonitor: React.FC<GlobalVitalsMonitorProps> = ({ user }) => {
     const [patients, setPatients] = useState<Patient[]>([]);
     const { addAlert, removeAlert } = useAlert();
     const { addToast } = useNotification();
     const { triggerAlert } = useAlertNotification();
     const previousAlertStatusRef = useRef<Record<string, boolean>>({});
 
+    // Fetch patients based on role:
+    // - Nurse: fetch ALL patients (global monitoring access)
+    // - Doctor: fetch ONLY their assigned patients
     useEffect(() => {
-        api.getAllPatients().then(setPatients);
-    }, []);
+        if (user.role === Role.Nurse) {
+            api.getAllPatients().then(setPatients);
+        } else if (user.role === Role.Doctor) {
+            api.getDoctorPatients(user.id).then(setPatients);
+        }
+    }, [user.role, user.id]);
 
     useEffect(() => {
         if (patients.length === 0) return;

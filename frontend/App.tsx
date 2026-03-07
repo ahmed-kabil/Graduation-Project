@@ -19,7 +19,7 @@ const App: React.FC = () => {
   return (
     <>
       <ToastContainer />
-      {user && (user.role === Role.Doctor || user.role === Role.Nurse) && <GlobalVitalsMonitor />}
+      {user && (user.role === Role.Doctor || user.role === Role.Nurse) && <GlobalVitalsMonitor user={user} />}
       {user && (user.role === Role.Doctor || user.role === Role.Nurse) && <NotificationPermissionBanner />}
       {(() => {
         if (isLoading) {

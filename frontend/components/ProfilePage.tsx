@@ -70,7 +70,7 @@ export const ProfilePage: React.FC = () => {
     const specialization = (user as Doctor).specialization;
     const contact = (user as Doctor).contact;
     const deviceId = (user as Patient).deviceId;
-    const password = (user as any).password || '••••••••';
+    const password: string = (user as any).password || '';
 
     const infoRows: { label: string; value: React.ReactNode }[] = [
         { label: 'Full Name', value: user.name },
@@ -122,14 +122,21 @@ export const ProfilePage: React.FC = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center py-3 gap-1 sm:gap-0">
                         <span className="text-sm font-medium text-slate-500 dark:text-slate-400 sm:w-40 flex-shrink-0">Password</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-800 dark:text-slate-200 font-medium font-mono">
-                                {showPassword ? password : '••••••••'}
-                            </span>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    readOnly
+                                    className="text-sm text-slate-800 dark:text-slate-200 font-medium font-mono bg-transparent border-none outline-none focus:ring-0 p-0 w-40 cursor-default"
+                                    tabIndex={-1}
+                                />
+                            </div>
                             <button
                                 type="button"
-                                onClick={() => setShowPassword(prev => !prev)}
-                                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowPassword(prev => !prev); }}
+                                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer select-none"
                                 aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                style={{ WebkitTapHighlightColor: 'transparent' }}
                             >
                                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                             </button>

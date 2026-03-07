@@ -72,15 +72,15 @@ const DoctorIcon = () => (
 const PieTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200">
+            <div className="bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
                 <p className="text-sm font-bold" style={{ color: payload[0].payload.fill }}>
                     {payload[0].name}
                 </p>
-                <p className="text-sm text-slate-600">
-                    Count: <span className="font-semibold text-slate-800">{payload[0].value}</span>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Count: <span className="font-semibold text-slate-800 dark:text-white">{payload[0].value}</span>
                 </p>
-                <p className="text-sm text-slate-600">
-                    Percentage: <span className="font-semibold text-slate-800">{(payload[0].percent * 100).toFixed(1)}%</span>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Percentage: <span className="font-semibold text-slate-800 dark:text-white">{(payload[0].percent * 100).toFixed(1)}%</span>
                 </p>
             </div>
         );
@@ -92,8 +92,8 @@ const PieTooltip = ({ active, payload }: any) => {
 const BarTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200">
-                <p className="text-sm font-bold text-slate-800">{label}</p>
+            <div className="bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
+                <p className="text-sm font-bold text-slate-800 dark:text-white">{label}</p>
                 <p className="text-sm text-indigo-600 font-medium">
                     Patients: {payload[0].value}
                 </p>
@@ -186,11 +186,11 @@ export const ReceptionistStats: React.FC = () => {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
                 {/* Total Patients Card */}
-                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-blue-500">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-blue-500">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs sm:text-sm font-medium text-slate-500">Total Patients</p>
-                            <p className="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">{totalPatients}</p>
+                            <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Total Patients</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mt-1">{totalPatients}</p>
                         </div>
                         <div className="bg-blue-100 p-2 sm:p-3 rounded-full text-blue-600">
                             <UsersIcon />
@@ -199,11 +199,11 @@ export const ReceptionistStats: React.FC = () => {
                 </div>
 
                 {/* Male Patients Card */}
-                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-sky-500">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-sky-500">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs sm:text-sm font-medium text-slate-500">Male Patients</p>
-                            <p className="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">{maleCount}</p>
+                            <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Male Patients</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mt-1">{maleCount}</p>
                             <p className="text-xs text-slate-400 mt-1">
                                 {totalPatients > 0 ? ((maleCount / totalPatients) * 100).toFixed(1) : 0}% of total
                             </p>
@@ -215,11 +215,11 @@ export const ReceptionistStats: React.FC = () => {
                 </div>
 
                 {/* Female Patients Card */}
-                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-pink-500">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-pink-500">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs sm:text-sm font-medium text-slate-500">Female Patients</p>
-                            <p className="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">{femaleCount}</p>
+                            <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Female Patients</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white mt-1">{femaleCount}</p>
                             <p className="text-xs text-slate-400 mt-1">
                                 {totalPatients > 0 ? ((femaleCount / totalPatients) * 100).toFixed(1) : 0}% of total
                             </p>
@@ -234,8 +234,8 @@ export const ReceptionistStats: React.FC = () => {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Gender Distribution Pie Chart */}
-                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
-                    <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3 sm:mb-4">Gender Distribution</h3>
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 sm:p-6">
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-800 dark:text-white mb-3 sm:mb-4">Gender Distribution</h3>
                     {totalPatients === 0 ? (
                         <div className="flex items-center justify-center h-48 sm:h-64 text-slate-400 text-sm">No patient data available</div>
                     ) : (
@@ -264,7 +264,7 @@ export const ReceptionistStats: React.FC = () => {
                                     verticalAlign="bottom"
                                     iconType="circle"
                                     formatter={(value: string) => (
-                                        <span className="text-xs sm:text-sm text-slate-600">{value}</span>
+                                        <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">{value}</span>
                                     )}
                                 />
                             </PieChart>
@@ -273,10 +273,10 @@ export const ReceptionistStats: React.FC = () => {
                 </div>
 
                 {/* Top Doctors Bar Chart */}
-                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 sm:p-6">
                     <div className="flex items-center gap-2 mb-3 sm:mb-4">
                         <div className="text-indigo-600"><DoctorIcon /></div>
-                        <h3 className="text-base sm:text-lg font-semibold text-slate-800">Top Doctors by Patient Count</h3>
+                        <h3 className="text-base sm:text-lg font-semibold text-slate-800 dark:text-white">Top Doctors by Patient Count</h3>
                     </div>
                     {topDoctorsData.length === 0 ? (
                         <div className="flex items-center justify-center h-48 sm:h-64 text-slate-400 text-sm">No doctor data available</div>

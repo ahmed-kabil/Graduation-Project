@@ -205,6 +205,8 @@ export const api = {
                 }
             }
 
+            // Store the login password so Profile page can show it
+            (foundUser as any).password = password;
             sessionStorage.setItem('user', JSON.stringify(foundUser));
             return foundUser;
         } else {
@@ -299,6 +301,15 @@ export const api = {
   },
   deleteStaffMember: (staffId: string) => {
     return apiFetch(`/staff/${staffId}`, { method: 'DELETE' });
+  },
+  updateStaffMember: (staffId: string, staffData: any) => {
+    const apiData: any = {};
+    if (staffData.name !== undefined) apiData.name = staffData.name;
+    if (staffData.age !== undefined) apiData.age = staffData.age;
+    if (staffData.gender !== undefined) apiData.gender = staffData.gender;
+    if (staffData.email !== undefined) apiData.email = staffData.email;
+    if (staffData.role !== undefined) apiData.role = staffData.role;
+    return apiFetch(`/staff/${staffId}`, { method: 'PATCH', body: JSON.stringify(apiData) });
   },
 
   // Vitals Data

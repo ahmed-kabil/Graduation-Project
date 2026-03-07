@@ -26,14 +26,14 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [appointmentToCancel, setAppointmentToCancel] = useState<string | null>(null);
 
+    const fetchAppointments = useCallback(() => {
+        return appointmentService.getAppointmentsForPatient(patient.id).then(setAppointments);
+    }, [patient.id]);
+
     useEffect(() => {
         api.getDoctor(patient.assignedDoctorId).then(doc => doc && setDoctor(doc));
         fetchAppointments();
-    }, [patient]);
-
-    const fetchAppointments = useCallback(() => {
-        appointmentService.getAppointmentsForPatient(patient.id).then(setAppointments);
-    }, [patient.id]);
+    }, [patient.id, patient.assignedDoctorId, fetchAppointments]);
     
     useEffect(() => {
         if (selectedDate && doctor) {
@@ -70,8 +70,11 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
         try {
             const created = await appointmentService.bookAppointment(appointmentData);
             setSuccess(`Appointment booked successfully for ${selectedTime} on ${selectedDate.toLocaleDateString()}!`);
-            // Immediately append the new appointment to local state so the list updates instantly
+            // Immediately append the new appointment for instant UI feedback
             setAppointments(prev => [...prev, created]);
+            // Also re-fetch from backend so the list is always authoritative
+            // (prevents issues with consecutive bookings where optimistic data could get stale)
+            fetchAppointments();
             setSelectedTime(null);
             setReason('');
             const dateString = selectedDate.toISOString().split('T')[0];
@@ -100,6 +103,9 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
             setAppointments(prev => prev.map(a =>
                 a._id === appointmentToCancel ? { ...a, status: 'cancelled' as const } : a
             ));
+
+            // Also re-fetch from backend for authoritative list
+            fetchAppointments();
 
             // Refresh booked times for the currently-selected date so the freed slot reappears
             if (doctor && selectedDate) {
@@ -152,7 +158,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
             } else if (isToday) {
                 dayClass += " bg-blue-100 text-blue-700 font-semibold";
             } else {
-                dayClass += " text-slate-700 hover:bg-slate-100";
+                dayClass += " text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700";
             }
 
             calendarDays.push(
@@ -168,13 +174,13 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
         }
 
         return (
-            <div className="bg-white p-6 rounded-xl shadow-md">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
                 <div className="flex items-center justify-between mb-4">
-                    <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="p-2 rounded-full hover:bg-slate-100"><ChevronLeftIcon /></button>
+                    <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"><ChevronLeftIcon /></button>
                     <h3 className="font-semibold text-lg">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
-                    <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="p-2 rounded-full hover:bg-slate-100"><ChevronRightIcon /></button>
+                    <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"><ChevronRightIcon /></button>
                 </div>
-                <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-500 mb-2">
+                <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-500 dark:text-slate-400 mb-2">
                     <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                 </div>
                 <div className="grid grid-cols-7 gap-2">{calendarDays}</div>
@@ -195,24 +201,24 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
         <>
             {/* Global feedback banners */}
             {success && (
-                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-lg flex items-center gap-2">
+                <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-sm rounded-lg flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                     <span>{success}</span>
-                    <button onClick={() => setSuccess(null)} className="ml-auto p-1 hover:bg-emerald-100 rounded-full"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    <button onClick={() => setSuccess(null)} className="ml-auto p-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-full"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
                 </div>
             )}
             {error && !selectedTime && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex items-center gap-2">
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm rounded-lg flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                     <span>{error}</span>
-                    <button onClick={() => setError(null)} className="ml-auto p-1 hover:bg-red-100 rounded-full"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    <button onClick={() => setError(null)} className="ml-auto p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
                 </div>
             )}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
                     {renderCalendar()}
                     {selectedDate && (
-                        <div className="bg-white p-6 rounded-xl shadow-md">
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
                             <h3 className="font-semibold mb-4">Available Slots for {selectedDate.toLocaleDateString()}</h3>
                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                 {AVAILABLE_TIMES.map(time => {
@@ -238,7 +244,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                                             onClick={() => setSelectedTime(time)}
                                             className={`
                                                 p-3 rounded-lg text-sm font-medium transition-colors duration-200
-                                                ${isDisabled ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-800 hover:bg-blue-200'}
+                                                ${isDisabled ? 'bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed' : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white hover:bg-blue-200'}
                                                 ${selectedTime === time ? 'bg-blue-600 text-white font-bold ring-2 ring-offset-2 ring-blue-500' : ''}
                                             `}
                                         >
@@ -250,12 +256,12 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                         </div>
                     )}
                     {selectedTime && (
-                        <div className="bg-white p-6 rounded-xl shadow-md">
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
                              <h3 className="font-semibold mb-2">Book for {selectedTime} on {selectedDate?.toLocaleDateString()}</h3>
                              <textarea 
                                 value={reason} 
                                 onChange={(e) => setReason(e.target.value)} 
-                                className="w-full p-2 border rounded-md mb-3"
+                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md mb-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                                 placeholder="Reason for visit..."
                             ></textarea>
                             {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
@@ -264,28 +270,28 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                         </div>
                     )}
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow-md">
-                     <h3 className="text-xl font-semibold text-slate-800 mb-4">Your Appointments</h3>
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
+                     <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Your Appointments</h3>
                      <div className="space-y-4 max-h-[calc(100vh-16rem)] overflow-y-auto">
                         {upcomingAppointments.length > 0 ? upcomingAppointments.map(app => {
                             const appDate = app.date.includes('T') ? app.date.split('T')[0] : app.date;
                             return (
-                            <div key={app._id} className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                            <div key={app._id} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700">
                                  <div className="flex items-center justify-between mb-1">
-                                    <div className="flex items-center text-slate-700 font-semibold">
+                                    <div className="flex items-center text-slate-700 dark:text-slate-300 font-semibold">
                                         <CalendarIcon />
                                         <span>{new Date(appDate + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })} at {app.time}</span>
                                     </div>
                                     <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Booked</span>
                                  </div>
-                                 {doctor && <p className="text-sm text-slate-600 pl-7 mb-1"><strong>Doctor:</strong> {doctor.name}</p>}
-                                <p className="text-sm text-slate-600 pl-7 mb-2"><strong>Reason:</strong> {app.reason}</p>
+                                 {doctor && <p className="text-sm text-slate-600 dark:text-slate-400 pl-7 mb-1"><strong>Doctor:</strong> {doctor.name}</p>}
+                                <p className="text-sm text-slate-600 dark:text-slate-400 pl-7 mb-2"><strong>Reason:</strong> {app.reason}</p>
                                 <div className="pl-7">
-                                   <button onClick={() => promptCancel(app._id)} className="text-xs text-red-600 hover:underline font-medium">Cancel Appointment</button>
+                                   <button onClick={() => promptCancel(app._id)} className="text-xs text-red-600 dark:text-red-400 hover:underline font-medium">Cancel Appointment</button>
                                 </div>
                             </div>
                             );
-                        }) : <p className="text-slate-500">You have no upcoming appointments.</p>}
+                        }) : <p className="text-slate-500 dark:text-slate-400">You have no upcoming appointments.</p>}
                      </div>
                 </div>
             </div>
@@ -297,7 +303,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                     role="dialog"
                     aria-modal="true"
                 >
-                  <div className="bg-white rounded-lg shadow-xl w-full max-w-sm transform transition-all animate-fade-in-scale">
+                  <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-sm transform transition-all animate-fade-in-scale">
                     <style>{`
                         @keyframes fade-in-scale {
                             from { transform: scale(0.95); opacity: 0; }
@@ -306,15 +312,15 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                         .animate-fade-in-scale { animation: fade-in-scale 0.2s forwards cubic-bezier(0.16, 1, 0.3, 1); }
                     `}</style>
                     <div className="p-6">
-                        <h3 id="cancel-title" className="text-lg font-semibold text-slate-900">Confirm Cancellation</h3>
-                        <p className="mt-2 text-sm text-slate-600">
+                        <h3 id="cancel-title" className="text-lg font-semibold text-slate-900 dark:text-white">Confirm Cancellation</h3>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                             Are you sure you want to cancel this appointment? This action cannot be undone.
                         </p>
                     </div>
-                    <div className="bg-slate-50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
+                    <div className="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
                         <button
                             type="button"
-                            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white rounded-md border border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             onClick={() => setShowCancelConfirm(false)}
                         >
                             No

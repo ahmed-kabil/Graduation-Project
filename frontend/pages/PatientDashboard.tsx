@@ -33,11 +33,11 @@ const VitalsCard: React.FC<{ vital: VitalSign }> = ({ vital }) => {
         'SpO2': <O2Icon/>,
     }
     return (
-        <div className="group bg-white p-6 rounded-2xl shadow-lg flex items-center transition-all duration-300 ease-in-out [transform-style:preserve-3d] hover:shadow-2xl hover:[transform:translateY(-8px)_rotateY(-15deg)_scale(1.03)] active:scale-[0.97]">
+        <div className="group bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg flex items-center transition-all duration-300 ease-in-out [transform-style:preserve-3d] hover:shadow-2xl hover:[transform:translateY(-8px)_rotateY(-15deg)_scale(1.03)] active:scale-[0.97]">
             <div className="mr-5 transition-transform duration-300 ease-in-out group-hover:[transform:translateZ(20px)]">{icons[vital.name]}</div>
             <div className="transition-transform duration-300 ease-in-out group-hover:[transform:translateZ(10px)]">
-                <p className="text-slate-500 text-sm font-medium">{vital.name}</p>
-                <p className="text-3xl font-bold text-slate-800">{vital.value} <span className="text-lg font-normal text-slate-600">{vital.unit}</span></p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{vital.name}</p>
+                <p className="text-3xl font-bold text-slate-800 dark:text-white">{vital.value} <span className="text-lg font-normal text-slate-600 dark:text-slate-400">{vital.unit}</span></p>
             </div>
         </div>
     )
@@ -49,8 +49,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const dataPoint = payload[0].payload;
     
     return (
-      <div className="bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200">
-        <p className="label text-sm font-bold text-slate-800 mb-1">{`Time: ${dataPoint.time || label}`}</p>
+      <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
+        <p className="label text-sm font-bold text-slate-800 dark:text-white mb-1">{`Time: ${dataPoint.time || label}`}</p>
         <p style={{ color: '#ef4444' }} className="text-sm font-medium">
           {`Heart Rate: ${dataPoint.heartRate?.toFixed(1) || '0.0'} BPM`}
         </p>
@@ -107,7 +107,7 @@ const VitalsDisplay: React.FC<{patient: Patient}> = ({ patient }) => {
     return (
         <div className="space-y-6">
              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-slate-800">{getGreeting()}, {patient.name.split(' ')[0]}!</h2>
+                <h2 className="text-3xl font-bold text-slate-800 dark:text-white">{getGreeting()}, {patient.name.split(' ')[0]}!</h2>
                 <div className={`mt-2 p-3 rounded-lg flex items-center text-sm font-medium ${statusColor}`}>
                     <CheckCircleIcon />
                     <p>{healthStatus}</p>
@@ -117,8 +117,8 @@ const VitalsDisplay: React.FC<{patient: Patient}> = ({ patient }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 [perspective:1000px]">
                 {vitals.map(v => <VitalsCard key={v.name} vital={v}/>)}
             </div>
-            <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
-                <h3 className="text-xl font-semibold text-slate-800 mb-4">Vitals History (Last 20 Readings)</h3>
+            <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg">
+                <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Vitals History (Last 20 Readings)</h3>
                 <ResponsiveContainer width="100%" height={350}>
                      <AreaChart data={mergedChartData} margin={isMobile ? { top: 5, right: 5, left: -25, bottom: 0 } : { top: 5, right: 20, left: -10, bottom: 5 }}>
                         <defs>
@@ -144,7 +144,7 @@ const VitalsDisplay: React.FC<{patient: Patient}> = ({ patient }) => {
                             dataKey="time" 
                             stroke="#64748b"
                             tick={{ fontSize: isMobile ? 10 : 12, fill: 'currentColor' }} 
-                            className="text-slate-600"
+                            className="text-slate-600 dark:text-slate-400"
                             tickLine={false}
                             interval={isMobile ? 'preserveEnd' : 'preserveStartEnd'}
                         />
@@ -205,23 +205,23 @@ const Chatbot: React.FC = () => {
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] flex flex-col">
-            <div className="p-4 border-b">
-                <h3 className="text-xl font-semibold text-slate-800">Chat with Assistant</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] flex flex-col">
+            <div className="p-4 border-b dark:border-slate-700">
+                <h3 className="text-xl font-semibold text-slate-800 dark:text-white">Chat with Assistant</h3>
             </div>
             <div className="flex-1 p-6 overflow-y-auto space-y-4">
                 {messages.map(msg => (
                     <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                         {msg.sender === 'bot' && <div className="w-8 h-8 rounded-full bg-indigo-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">AI</div>}
-                        <div className={`max-w-lg px-4 py-3 rounded-2xl ${msg.sender === 'user' ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-slate-200 text-slate-800 rounded-bl-none'}`}>
+                        <div className={`max-w-lg px-4 py-3 rounded-2xl ${msg.sender === 'user' ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white rounded-bl-none'}`}>
                             <p dir="auto">{msg.text}</p>
                         </div>
                     </div>
                 ))}
-                {isLoading && <div className="flex justify-start"><div className="bg-slate-200 text-slate-800 px-4 py-3 rounded-2xl rounded-bl-none"><TypingIndicator/></div></div>}
+                {isLoading && <div className="flex justify-start"><div className="bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white px-4 py-3 rounded-2xl rounded-bl-none"><TypingIndicator/></div></div>}
                 <div ref={messagesEndRef} />
             </div>
-            <div className="p-4 border-t bg-slate-50 rounded-b-2xl">
+            <div className="p-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-b-2xl">
                 <div className="flex items-center gap-2">
                     <input 
                         type="text"
@@ -230,7 +230,7 @@ const Chatbot: React.FC = () => {
                         onKeyPress={e => e.key === 'Enter' && handleSend()}
                         placeholder="Type your message..."
                         dir="auto"
-                        className="w-full px-4 py-2 border text-slate-800 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-4 py-2 border dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         disabled={isLoading}
                     />
                     <button onClick={handleSend} disabled={isLoading} className="bg-indigo-500 text-white p-3 rounded-full hover:bg-indigo-600 disabled:bg-indigo-300 transition">
@@ -365,7 +365,7 @@ const DoctorChatModal: React.FC<{
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity duration-300">
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg h-[90vh] flex flex-col transform transition-transform duration-300 scale-95 opacity-0 animate-fade-in-scale">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg w-full max-w-lg h-[90vh] flex flex-col transform transition-transform duration-300 scale-95 opacity-0 animate-fade-in-scale">
         <style>{`
             @keyframes fade-in-scale {
                 from { transform: scale(0.95); opacity: 0; }
@@ -373,9 +373,9 @@ const DoctorChatModal: React.FC<{
             }
             .animate-fade-in-scale { animation: fade-in-scale 0.3s forwards cubic-bezier(0.16, 1, 0.3, 1); }
         `}</style>
-        <header className="p-4 border-b flex items-center justify-between flex-shrink-0">
-          <h3 className="text-xl font-semibold text-slate-800">Chat with {doctor.name}</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-800 text-3xl font-light">&times;</button>
+        <header className="p-4 border-b dark:border-slate-700 flex items-center justify-between flex-shrink-0">
+          <h3 className="text-xl font-semibold text-slate-800 dark:text-white">Chat with {doctor.name}</h3>
+          <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
         </header>
         <div className="flex-1 p-6 overflow-y-auto space-y-4">
           {messages.map((msg, idx) => {
@@ -387,11 +387,11 @@ const DoctorChatModal: React.FC<{
               <React.Fragment key={msg.id}>
                 {showSeparator && (
                   <div className="flex items-center justify-center my-3">
-                    <span className="bg-white text-slate-500 text-xs font-medium px-3 py-1 rounded-full shadow-sm border border-slate-200">{getDateLabel(msgDate)}</span>
+                    <span className="bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-medium px-3 py-1 rounded-full shadow-sm border border-slate-200 dark:border-slate-700">{getDateLabel(msgDate)}</span>
                   </div>
                 )}
                 <div className={`flex items-end gap-2 ${msg.senderId === patient.id ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-md px-4 py-3 rounded-2xl ${msg.senderId === patient.id ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-slate-200 text-slate-800 rounded-bl-none'}`}>
+                  <div className={`max-w-md px-4 py-3 rounded-2xl ${msg.senderId === patient.id ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white rounded-bl-none'}`}>
                     <p dir="auto">{msg.text}</p>
                     <div className="flex items-center justify-end gap-1 mt-1">
                       <p className="text-xs opacity-70">{msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
@@ -408,7 +408,7 @@ const DoctorChatModal: React.FC<{
           })}
           <div ref={messagesEndRef} />
         </div>
-        <div className="p-4 border-t bg-slate-50 rounded-b-2xl flex-shrink-0">
+        <div className="p-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-b-2xl flex-shrink-0">
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -417,7 +417,7 @@ const DoctorChatModal: React.FC<{
               onKeyPress={e => e.key === 'Enter' && handleSend()}
               placeholder="Type your message..."
               dir="auto"
-              className="w-full px-4 py-2 border text-slate-800 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2 border dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
               disabled={isLoading}
             />
             <button onClick={handleSend} disabled={isLoading} className="bg-indigo-500 text-white p-3 rounded-full hover:bg-indigo-600 disabled:bg-indigo-300 transition">
@@ -437,16 +437,16 @@ const DoctorInfo: React.FC<{ patient: Patient; doctor: Doctor | null; isChatOpen
 
     return (
         <>
-            <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
-                <h3 className="text-2xl font-semibold text-slate-800">Your Assigned Doctor</h3>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-8 space-y-6">
+                <h3 className="text-2xl font-semibold text-slate-800 dark:text-white">Your Assigned Doctor</h3>
                 <div className="flex flex-col sm:flex-row items-center gap-6">
                     <div className="w-24 h-24 rounded-full bg-sky-100 flex items-center justify-center border-4 border-white shadow-md">
                         <DoctorIcon/>
                     </div>
                     <div className="flex-1 text-center sm:text-left">
-                        <h4 className="text-3xl font-bold text-slate-900">{doctor.name}</h4>
+                        <h4 className="text-3xl font-bold text-slate-900 dark:text-white">{doctor.name}</h4>
                         <p className="text-xl text-sky-600 font-medium">{doctor.specialization}</p>
-                        <p className="text-md text-slate-500 mt-2">Contact: {doctor.contact}</p>
+                        <p className="text-md text-slate-500 dark:text-slate-400 mt-2">Contact: {doctor.contact}</p>
                     </div>
                 </div>
                 <button onClick={onOpenChat} className="w-full py-3 px-4 font-semibold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">

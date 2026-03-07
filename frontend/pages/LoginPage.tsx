@@ -84,8 +84,8 @@ export const LoginPage: React.FC = () => {
     // Show a general error only when there's no field-specific error
     const generalError = error && !errorField && !Object.keys(localErrors).length ? error : null;
 
-    const baseInputClasses = "w-full px-4 py-2 text-slate-700 bg-white/80 border rounded-md focus:outline-none focus:ring-2 transition";
-    const normalBorder = "border-slate-300 focus:ring-blue-500 focus:border-transparent";
+    const baseInputClasses = "w-full px-4 py-2 text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-700/80 border rounded-md focus:outline-none focus:ring-2 transition";
+    const normalBorder = "border-slate-300 dark:border-slate-600 focus:ring-blue-500 focus:border-transparent";
     const errorBorder = "border-red-500 focus:ring-red-500 focus:border-red-500 bg-red-50/80";
     const buttonClasses = "w-full py-3 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 transition-colors";
 
@@ -97,14 +97,14 @@ export const LoginPage: React.FC = () => {
                 style={{ backgroundImage: "url('/hospital-bg.jpg')" }}
             />
             {/* Subtle overlay for readability */}
-            <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px]" />
+            <div className="absolute inset-0 bg-white/30 dark:bg-black/50 backdrop-blur-[2px]" />
 
             {/* Login card with transparency */}
-            <div className="relative z-10 w-full max-w-md p-8 space-y-6 bg-white/80 backdrop-blur-md rounded-xl shadow-2xl border border-white/40">
+            <div className="relative z-10 w-full max-w-md p-8 space-y-6 bg-white/80 dark:bg-slate-800/85 backdrop-blur-md rounded-xl shadow-2xl border border-white/40 dark:border-slate-700/50">
                 <div className="text-center mb-6">
                     <RedCrescentIcon />
-                    <h2 className="text-3xl font-bold text-slate-800 mt-4">Al Zohor Hospital Portal</h2>
-                    <p className="text-slate-500 mt-1">Sign in to access your dashboard</p>
+                    <h2 className="text-3xl font-bold text-slate-800 dark:text-white mt-4">Al Zohor Hospital Portal</h2>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1">Sign in to access your dashboard</p>
                 </div>
                 <form onSubmit={handleLogin} noValidate className="space-y-4">
                     {/* Email field */}
@@ -141,7 +141,7 @@ export const LoginPage: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(prev => !prev)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none"
                                 tabIndex={-1}
                                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                             >

@@ -69,20 +69,20 @@ const PatientFormModal: React.FC<{
 
     if (!isOpen) return null;
     
-    const inputClasses = "mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500";
+    const inputClasses = "mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500";
     
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg">
                 <form onSubmit={handleSubmit}>
                     <div className="p-6">
-                        <h3 className="text-lg font-semibold text-slate-900">Add New Patient</h3>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Add New Patient</h3>
                         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label className="block text-sm font-medium text-slate-700">Patient ID</label><input type="text" name="id" value={formData.id || ''} onChange={handleChange} className={inputClasses} required /></div>
-                            <div><label className="block text-sm font-medium text-slate-700">Full Name</label><input type="text" name="name" value={formData.name || ''} onChange={handleChange} className={inputClasses} required /></div>
-                            <div><label className="block text-sm font-medium text-slate-700">Age</label><input type="number" name="age" value={formData.age || ''} onChange={handleChange} className={inputClasses} required /></div>
+                            <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Patient ID</label><input type="text" name="id" value={formData.id || ''} onChange={handleChange} className={inputClasses} required /></div>
+                            <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label><input type="text" name="name" value={formData.name || ''} onChange={handleChange} className={inputClasses} required /></div>
+                            <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Age</label><input type="number" name="age" value={formData.age || ''} onChange={handleChange} className={inputClasses} required /></div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">Gender</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Gender</label>
                                 <select 
                                     name="gender" 
                                     value={formData.gender || 'male'} // Ensure default value is lowercase
@@ -93,13 +93,13 @@ const PatientFormModal: React.FC<{
                                     <option value="female">Female</option> 
                                 </select>
                             </div>
-                            <div><label className="block text-sm font-medium text-slate-700">Device ID</label><input type="text" name="deviceId" value={formData.deviceId || ''} onChange={handleChange} className={inputClasses} required /></div>
-                            <div className="md:col-span-2"><label className="block text-sm font-medium text-slate-700">Email</label><input type="email" name="email" value={formData.email || ''} onChange={handleChange} className={inputClasses} required/></div>
-                            <div className="md:col-span-2"><label className="block text-sm font-medium text-slate-700">Assigned Doctor</label><select name="assignedDoctorId" value={formData.assignedDoctorId || ''} onChange={handleChange} className={inputClasses} required><option value="" disabled>Select a doctor</option>{doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
+                            <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Device ID</label><input type="text" name="deviceId" value={formData.deviceId || ''} onChange={handleChange} className={inputClasses} required /></div>
+                            <div className="md:col-span-2"><label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email</label><input type="email" name="email" value={formData.email || ''} onChange={handleChange} className={inputClasses} required/></div>
+                            <div className="md:col-span-2"><label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Assigned Doctor</label><select name="assignedDoctorId" value={formData.assignedDoctorId || ''} onChange={handleChange} className={inputClasses} required><option value="" disabled>Select a doctor</option>{doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
                         </div>
                     </div>
-                    <div className="bg-slate-50 px-6 py-3 flex justify-end gap-3 rounded-b-lg">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white rounded-md border border-slate-300 hover:bg-slate-50">Cancel</button>
+                    <div className="bg-slate-50 dark:bg-slate-700/50 px-6 py-3 flex justify-end gap-3 rounded-b-lg">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">Cancel</button>
                         <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400">{isLoading ? 'Saving...' : 'Save Patient'}</button>
                     </div>
                 </form>
@@ -203,7 +203,7 @@ export const ReceptionistDashboard: React.FC = () => {
     const goToNextPage = () => setCurrentPage((page) => Math.min(page + 1, totalPages));
     const goToPreviousPage = () => setCurrentPage((page) => Math.max(page - 1, 1));
     
-    const inputClasses = "w-full px-2 py-1 bg-white border border-slate-300 rounded-md text-sm shadow-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500";
+    const inputClasses = "w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500";
 
     return (
         <>
@@ -213,17 +213,17 @@ export const ReceptionistDashboard: React.FC = () => {
                 ) : activeTab === 'Statistics' ? (
                     <ReceptionistStats />
                 ) : (
-                <div className="bg-white rounded-xl shadow-md">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md">
                     <div className="p-4 sm:p-6 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-start sm:items-center border-b">
-                        <h3 className="text-lg sm:text-xl font-semibold text-slate-800">Patient Records</h3>
+                        <h3 className="text-lg sm:text-xl font-semibold text-slate-800 dark:text-white">Patient Records</h3>
                         <button onClick={() => setIsAddModalOpen(true)} className="flex items-center px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 w-full sm:w-auto justify-center sm:justify-start">
                             <AddIcon />
                             Add New Patient
                         </button>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left text-slate-500 min-w-[700px]">
-                            <thead className="text-xs text-slate-700 uppercase bg-slate-50">
+                        <table className="w-full text-sm text-left text-slate-500 dark:text-slate-400 min-w-[700px]">
+                            <thead className="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-700/50">
                                 <tr>
                                     <th scope="col" className="px-6 py-3">Patient ID</th>
                                     <th scope="col" className="px-6 py-3">Name</th>
@@ -237,10 +237,10 @@ export const ReceptionistDashboard: React.FC = () => {
                             </thead>
                             <tbody>
                                 {currentPatients.map(p => (
-                                   <tr key={p._id} className={`border-b transition-colors duration-150 ${editingPatientId === p.id ? 'bg-sky-50' : 'odd:bg-white even:bg-slate-50 hover:bg-sky-100'}`}>
+                                   <tr key={p._id} className={`border-b transition-colors duration-150 ${editingPatientId === p.id ? 'bg-sky-50 dark:bg-sky-900/30' : 'odd:bg-white dark:odd:bg-slate-800 even:bg-slate-50 dark:even:bg-slate-700/50 hover:bg-sky-100 dark:hover:bg-sky-900/30'}`}>
                                         {editingPatientId === p.id ? (
                                             <>
-                                                <td className="px-6 py-2 font-mono text-slate-700">{p.id}</td>
+                                                <td className="px-6 py-2 font-mono text-slate-700 dark:text-slate-300">{p.id}</td>
                                                 <td className="px-6 py-2"><input type="text" name="name" value={editFormData.name || ''} onChange={handleEditFormChange} className={inputClasses} /></td>
                                                 <td className="px-6 py-2"><input type="email" name="email" value={editFormData.email || ''} onChange={handleEditFormChange} className={inputClasses} /></td>
                                                 <td className="px-6 py-2"><input type="number" name="age" value={editFormData.age || ''} onChange={handleEditFormChange} className={`${inputClasses} w-16`} /></td>
@@ -255,23 +255,23 @@ export const ReceptionistDashboard: React.FC = () => {
                                                 <td className="px-6 py-2">
                                                     <div className="flex items-center gap-3">
                                                         <button onClick={handleUpdatePatient} className="text-emerald-600 hover:text-emerald-800 p-1 rounded-full hover:bg-emerald-100"><SaveIcon/></button>
-                                                        <button onClick={handleCancelEdit} className="text-slate-600 hover:text-slate-800 p-1 rounded-full hover:bg-slate-200"><CancelIcon/></button>
+                                                        <button onClick={handleCancelEdit} className="text-slate-600 dark:text-slate-400 hover:text-slate-800 p-1 rounded-full hover:bg-slate-200"><CancelIcon/></button>
                                                     </div>
                                                 </td>
                                             </>
                                         ) : (
                                             <>
-                                                <td className="px-6 py-4 font-mono text-slate-600">{p.id}</td>
-                                                <td className="px-6 py-4 font-medium text-slate-900">{p.name}</td>
+                                                <td className="px-6 py-4 font-mono text-slate-600 dark:text-slate-400">{p.id}</td>
+                                                <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{p.name}</td>
                                                 <td className="px-6 py-4">{p.email || 'N/A'}</td>
                                                 <td className="px-6 py-4">{p.age}</td>
                                                 <td className="px-6 py-4">{p.gender}</td>
-                                                <td className="px-6 py-4 font-mono text-slate-600">{p.deviceId}</td>
+                                                <td className="px-6 py-4 font-mono text-slate-600 dark:text-slate-400">{p.deviceId}</td>
                                                 <td className="px-6 py-4">{doctors.find(d => d.id === p.assignedDoctorId)?.name || 'N/A'}</td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-4">
                                                         <button onClick={() => handleEdit(p)} className="text-blue-600 hover:text-blue-800" aria-label={`Edit ${p.name}`}><EditIcon/></button>
-                                                        <button onClick={() => setPatientToDelete(p)} className="text-red-600 hover:text-red-800" aria-label={`Delete ${p.name}`}><DeleteIcon/></button>
+                                                        <button onClick={() => setPatientToDelete(p)} className="text-red-600 dark:text-red-400 hover:text-red-800" aria-label={`Delete ${p.name}`}><DeleteIcon/></button>
                                                     </div>
                                                 </td>
                                             </>
@@ -283,21 +283,21 @@ export const ReceptionistDashboard: React.FC = () => {
                     </div>
                     {totalPages > 1 && (
                          <div className="p-4 border-t flex items-center justify-between">
-                            <span className="text-sm text-slate-600">
+                            <span className="text-sm text-slate-600 dark:text-slate-400">
                                 Page {currentPage} of {totalPages}
                             </span>
                             <div className="flex gap-2">
                                 <button 
                                     onClick={goToPreviousPage} 
                                     disabled={currentPage === 1}
-                                    className="px-3 py-1 text-sm font-medium text-slate-700 bg-white rounded-md border border-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                 >
                                     Previous
                                 </button>
                                 <button 
                                     onClick={goToNextPage} 
                                     disabled={currentPage === totalPages}
-                                    className="px-3 py-1 text-sm font-medium text-slate-700 bg-white rounded-md border border-slate-300 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                 >
                                     Next
                                 </button>
@@ -320,7 +320,7 @@ export const ReceptionistDashboard: React.FC = () => {
                     role="dialog"
                     aria-modal="true"
                 >
-                  <div className="bg-white rounded-lg shadow-xl w-full max-w-sm transform transition-all animate-fade-in-scale">
+                  <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-sm transform transition-all animate-fade-in-scale">
                     <style>{`
                         @keyframes fade-in-scale {
                             from { transform: scale(0.95); opacity: 0; }
@@ -329,12 +329,12 @@ export const ReceptionistDashboard: React.FC = () => {
                         .animate-fade-in-scale { animation: fade-in-scale 0.2s forwards cubic-bezier(0.16, 1, 0.3, 1); }
                     `}</style>
                     <div className="p-6">
-                        <h3 id="delete-patient-title" className="text-lg font-semibold text-slate-900">Confirm Deletion</h3>
-                        <p className="mt-2 text-sm text-slate-600">
+                        <h3 id="delete-patient-title" className="text-lg font-semibold text-slate-900 dark:text-white">Confirm Deletion</h3>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                             This action cannot be undone. To permanently delete <strong>{patientToDelete.name}</strong>, please type their name below.
                         </p>
                         <div className="mt-4">
-                            <label htmlFor="delete-confirm" className="block text-sm font-medium text-slate-700 sr-only">
+                            <label htmlFor="delete-confirm" className="block text-sm font-medium text-slate-700 dark:text-slate-300 sr-only">
                                 Patient Name
                             </label>
                             <input
@@ -342,19 +342,19 @@ export const ReceptionistDashboard: React.FC = () => {
                                 id="delete-confirm"
                                 value={deleteConfirmText}
                                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                                 autoFocus
                             />
                         </div>
                     </div>
-                    <div className="bg-slate-50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
+                    <div className="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
                         <button
                             type="button"
                             onClick={() => {
                                 setPatientToDelete(null);
                                 setDeleteConfirmText('');
                             }}
-                            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white rounded-md border border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                             Cancel
                         </button>

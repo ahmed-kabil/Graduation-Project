@@ -79,25 +79,25 @@ export const DoctorAppointmentsView: React.FC<DoctorAppointmentsViewProps> = ({ 
     };
 
     if (isLoading) {
-        return <div className="p-6 text-slate-600">Loading appointments...</div>;
+        return <div className="p-6 text-slate-600 dark:text-slate-400">Loading appointments...</div>;
     }
 
     const sortedDates = Object.keys(appointments).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
     return (
-        <div className="bg-white rounded-xl shadow-md p-6 h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] flex flex-col">
-            <h3 className="text-2xl font-semibold text-slate-800 mb-6 border-b pb-4">Upcoming Appointments</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] flex flex-col">
+            <h3 className="text-2xl font-semibold text-slate-800 dark:text-white mb-6 border-b pb-4">Upcoming Appointments</h3>
             <div className="flex-1 overflow-y-auto">
                 {sortedDates.length > 0 ? (
                     <div className="space-y-6">
                         {sortedDates.map(date => (
                             <div key={date}>
-                                <h4 className="font-bold text-lg text-slate-700 mb-3 sticky top-0 bg-white/80 backdrop-blur-sm py-2">{date}</h4>
+                                <h4 className="font-bold text-lg text-slate-700 dark:text-slate-300 mb-3 sticky top-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm py-2">{date}</h4>
                                 <div className="space-y-3">
                                     {appointments[date].map(app => (
                                         <div 
                                             key={app._id} 
-                                            className="w-full text-left p-4 rounded-lg bg-slate-50 border border-slate-200 hover:bg-sky-50 transition-all duration-200"
+                                            className="w-full text-left p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 hover:bg-sky-50 dark:hover:bg-sky-900/30 transition-all duration-200"
                                         >
                                             <div className="flex justify-between items-start">
                                                 <button
@@ -105,8 +105,8 @@ export const DoctorAppointmentsView: React.FC<DoctorAppointmentsViewProps> = ({ 
                                                     className="text-left flex-1 focus:outline-none"
                                                     aria-label={`View details for ${app.patientName}'s appointment at ${app.time}`}
                                                 >
-                                                    <p className="font-semibold text-slate-800">{app.patientName}</p>
-                                                    <p className="text-sm text-slate-600 mt-1"><strong>Reason:</strong> {app.reason}</p>
+                                                    <p className="font-semibold text-slate-800 dark:text-white">{app.patientName}</p>
+                                                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1"><strong>Reason:</strong> {app.reason}</p>
                                                 </button>
                                                 <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                                                     <div className="flex items-center text-sm font-medium bg-sky-100 text-sky-700 px-3 py-1 rounded-full">
@@ -130,7 +130,7 @@ export const DoctorAppointmentsView: React.FC<DoctorAppointmentsViewProps> = ({ 
                         ))}
                     </div>
                 ) : (
-                    <p className="text-slate-500 text-center mt-8">No upcoming appointments scheduled.</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-center mt-8">No upcoming appointments scheduled.</p>
                 )}
             </div>
         </div>
