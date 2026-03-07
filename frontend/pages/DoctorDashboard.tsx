@@ -20,21 +20,6 @@ const MessageIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" hei
 const AppointmentIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>;
 const NurseChatIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
 const SendIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>;
-const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>;
-
-// ------- Delete Confirmation Modal -------
-const DeleteConfirmModal: React.FC<{ name: string; onConfirm: () => void; onCancel: () => void }> = ({ name, onConfirm, onCancel }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onCancel}>
-    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4" onClick={e => e.stopPropagation()}>
-      <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Delete Conversation</h3>
-      <p className="text-slate-600 dark:text-slate-300 mb-6">Are you sure you want to delete the entire conversation with <strong>{name}</strong>? This action cannot be undone.</p>
-      <div className="flex justify-end gap-3">
-        <button onClick={onCancel} className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition">Cancel</button>
-        <button onClick={onConfirm} className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition font-medium">Delete</button>
-      </div>
-    </div>
-  </div>
-);
 
 const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = ({ doctor, initialPatientId }) => {
   type ConversationSummary = { patient: Patient, lastMessage: DoctorPatientMessage, unreadCount: number };
@@ -44,7 +29,6 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const fetchConversations = useCallback(async () => {
     const convos = await api.getDoctorConversations(doctor.id);
@@ -166,21 +150,6 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
     setSelectedPatient(patient);
   };
 
-  const handleDeleteConversation = async () => {
-    if (!deleteTarget) return;
-    try {
-      await chatService.deleteDocPatConversation(deleteTarget.id);
-      if (selectedPatient && chatService.getConversationId(selectedPatient.id) === deleteTarget.id) {
-        setSelectedPatient(null);
-        setMessages([]);
-      }
-      await fetchConversations();
-    } catch (err) {
-      console.error('Failed to delete conversation:', err);
-    }
-    setDeleteTarget(null);
-  };
-
   const handleSend = async () => {
     if (!input.trim() || !selectedPatient || isLoading) return;
     setIsLoading(true);
@@ -233,7 +202,6 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 truncate" dir="auto">{convo.lastMessage.text}</p>
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: chatService.getConversationId(convo.patient.id), name: convo.patient.name }); }} className="flex-shrink-0 p-2 mr-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition" title="Delete conversation"><TrashIcon /></button>
               </div>
             )) : <p className="p-4 text-slate-500 dark:text-slate-400">No conversations yet.</p>}
           </div>
@@ -293,7 +261,6 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
           )}
         </div>
       </div>
-      {deleteTarget && <DeleteConfirmModal name={deleteTarget.name} onConfirm={handleDeleteConversation} onCancel={() => setDeleteTarget(null)} />}
     </div>
   );
 };
@@ -307,7 +274,6 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -433,21 +399,6 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
     }
   };
 
-  const handleDeleteConversation = async () => {
-    if (!deleteTarget) return;
-    try {
-      await chatService.deleteDocNurConversation(deleteTarget.id);
-      if (selectedNurseConvo && selectedNurseConvo.conversation_id === deleteTarget.id) {
-        setSelectedNurseConvo(null);
-        setMessages([]);
-      }
-      await fetchConversations();
-    } catch (err) {
-      console.error('Failed to delete nurse conversation:', err);
-    }
-    setDeleteTarget(null);
-  };
-
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 10rem)', minHeight: '400px' }}>
       <div className="flex-1 flex relative overflow-hidden">
@@ -466,7 +417,6 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 truncate" dir="auto">{item.conversation.last_message || 'No messages yet'}</p>
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: item.conversation.conversation_id, name: item.conversation.nurse_name }); }} className="flex-shrink-0 p-2 mr-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition" title="Delete conversation"><TrashIcon /></button>
               </div>
             )) : <p className="p-4 text-slate-500 dark:text-slate-400">No nurse conversations yet.</p>}
           </div>
@@ -524,7 +474,6 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
           )}
         </div>
       </div>
-      {deleteTarget && <DeleteConfirmModal name={deleteTarget.name} onConfirm={handleDeleteConversation} onCancel={() => setDeleteTarget(null)} />}
     </div>
   );
 };
