@@ -131,6 +131,7 @@ services:
     environment:
       - PINECONE_API_KEY=${PINECONE_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GEMINI_API_KEYS=${GEMINI_API_KEYS}
       - GROQ_API_KEY=${GROQ_API_KEY}
       - FORCE_REINDEX=false
     networks:

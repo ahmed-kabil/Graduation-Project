@@ -3,27 +3,29 @@
 from dotenv import load_dotenv
 import os
 import time
-from src.helper import load_pdf_files, filter_to_minimal_docs, text_split, download_embeddings
+import logging
+from src.helper import load_pdf_files, filter_to_minimal_docs, text_split, get_key_pool
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from pinecone import Pinecone
 from pinecone import ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
+
 load_dotenv()
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # Validate required API keys
 if not PINECONE_API_KEY or PINECONE_API_KEY == "your_pinecone_api_key_here":
     print("ERROR: PINECONE_API_KEY is not set or is placeholder. Please set a valid key in .env")
     exit(1)
 
-if not GOOGLE_API_KEY or GOOGLE_API_KEY == "your_google_api_key_here":
-    print("ERROR: GOOGLE_API_KEY is not set or is placeholder. Please set a valid key in .env")
-    exit(1)
+# Initialize the key pool (reads GEMINI_API_KEYS or GOOGLE_API_KEY)
+key_pool = get_key_pool()
 
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 # Initialize Pinecone client immediately after loading environment variables
 pc = Pinecone(api_key=PINECONE_API_KEY)
@@ -69,51 +71,50 @@ else:
     text_chunks = text_split(minimal_docs)
     print(f"Prepared {len(text_chunks)} chunks (chunk_size=700, overlap=70)")
 
-    # Initialize embeddings only when needed
-    embeddings = download_embeddings()
-
-    # ── Batch upload with rate-limit handling ─────────────────────────────
-    # Google Gemini free tier: 100 embed requests/min.
-    # Upload in small batches with delays to stay within limits.
-    BATCH_SIZE = 80          # docs per batch (each becomes 1 API call)
-    DELAY_BETWEEN = 2        # seconds between batches
-    LONG_PAUSE_EVERY = 40    # big pause every N batches
-    LONG_PAUSE_SECS = 60     # duration of big pause
+    # ── Batch upload with key rotation ────────────────────────────────────
+    BATCH_SIZE = 80
+    DELAY_BETWEEN = 2
+    LONG_PAUSE_EVERY = 40
+    LONG_PAUSE_SECS = 60
 
     total = len(text_chunks)
     uploaded = 0
 
-    # Get the Pinecone index for adding documents
-    index = pc.Index(index_name)
-
     for batch_num, i in enumerate(range(0, total, BATCH_SIZE), start=1):
         batch = text_chunks[i : i + BATCH_SIZE]
-        retry_count = 0
-        max_retries = 5
 
-        while retry_count < max_retries:
+        success = False
+        while not success:
             try:
+                current_key = key_pool.current_key
+                embeddings = GoogleGenerativeAIEmbeddings(
+                    model="models/gemini-embedding-001",
+                    google_api_key=current_key
+                )
                 PineconeVectorStore.from_documents(
                     documents=batch,
                     embedding=embeddings,
                     index_name=index_name
                 )
                 uploaded += len(batch)
-                print(f"  Batch {batch_num}: uploaded {uploaded}/{total} chunks")
-                break
+                logger.info("Batch %d: uploaded %d/%d chunks using %s",
+                            batch_num, uploaded, total, key_pool.current_key_label)
+                success = True
+
             except Exception as e:
-                retry_count += 1
-                err_msg = str(e).lower()
-                if "quota" in err_msg or "rate" in err_msg or "resource_exhausted" in err_msg or "429" in err_msg:
-                    wait_time = min(60 * retry_count, 120)
-                    print(f"  Rate limited on batch {batch_num}, waiting {wait_time}s (retry {retry_count}/{max_retries})...")
-                    time.sleep(wait_time)
-                else:
-                    print(f"  Error on batch {batch_num}: {e}")
-                    if retry_count >= max_retries:
-                        print(f"  FAILED batch {batch_num} after {max_retries} retries. Continuing...")
+                err_str = str(e).lower()
+                if "429" in str(e) or "quota" in err_str or "rate" in err_str or "resourceexhausted" in err_str:
+                    if key_pool.rotate():
+                        logger.info("Retrying batch %d with %s...", batch_num, key_pool.current_key_label)
+                        time.sleep(5)
                     else:
-                        time.sleep(10)
+                        # All keys exhausted — wait 60s and reset (daily quotas may recover)
+                        logger.warning("All keys exhausted. Waiting 60s before retrying...")
+                        time.sleep(60)
+                        key_pool.reset_exhausted()
+                else:
+                    logger.error("Non-rate-limit error on batch %d: %s", batch_num, e)
+                    raise
 
         # Rate-limit pacing
         if batch_num % LONG_PAUSE_EVERY == 0:

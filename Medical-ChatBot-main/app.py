@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from src.prompt import *
 import os
 import re
+import time
 import logging
 from pinecone import Pinecone
 
@@ -30,7 +31,6 @@ load_dotenv()
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT")
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # ─── Pinecone client ─────────────────────────────────────────────────────────
@@ -134,6 +134,13 @@ def chat():
         memory.save_context({"input": msg}, {"output": answer})
 
         return str(answer)
+
+    except RuntimeError as e:
+        # All API keys exhausted
+        if "exhausted" in str(e).lower():
+            logger.error("All Gemini API keys exhausted: %s", e)
+            return "All API keys are currently exhausted. Please try again later."
+        raise
 
     except Exception as e:
         logger.error("Error generating response: %s", e, exc_info=True)
