@@ -2,6 +2,7 @@
 
 from dotenv import load_dotenv
 import os
+import time
 from src.helper import load_pdf_files, filter_to_minimal_docs, text_split, download_embeddings
 from pinecone import Pinecone
 from pinecone import ServerlessSpec
@@ -39,7 +40,6 @@ if index_name in existing_index_names and force_reindex:
     print(f"FORCE_REINDEX enabled — deleting existing index '{index_name}'...")
     pc.delete_index(index_name)
     # Wait for deletion to complete
-    import time
     time.sleep(5)
     print(f"Index '{index_name}' deleted. Will recreate with updated chunking.")
     existing_index_names.discard(index_name)
@@ -54,10 +54,14 @@ else:
     # Create the index
     pc.create_index(
         name=index_name,
-        dimension=768,  # Dimension of Google embeddings model "models/embedding-001"
+        dimension=3072,  # Dimension of Google Gemini embedding model "gemini-embedding-001"
         metric="cosine",  # Similarity metric
         spec=ServerlessSpec(cloud="aws", region="us-east-1")
     )
+
+    # Wait for index to be ready
+    print("Waiting for index to be ready...")
+    time.sleep(10)
 
     # Load and process documents only when creating the index
     extracted_data = load_pdf_files(data='data/')
@@ -68,10 +72,54 @@ else:
     # Initialize embeddings only when needed
     embeddings = download_embeddings()
 
-    # Upload documents to Pinecone
-    PineconeVectorStore.from_documents(
-        documents=text_chunks,
-        embedding=embeddings,
-        index_name=index_name
-    )
-    print(f"Successfully uploaded {len(text_chunks)} chunks to Pinecone.")
+    # ── Batch upload with rate-limit handling ─────────────────────────────
+    # Google Gemini free tier: 100 embed requests/min.
+    # Upload in small batches with delays to stay within limits.
+    BATCH_SIZE = 80          # docs per batch (each becomes 1 API call)
+    DELAY_BETWEEN = 2        # seconds between batches
+    LONG_PAUSE_EVERY = 40    # big pause every N batches
+    LONG_PAUSE_SECS = 60     # duration of big pause
+
+    total = len(text_chunks)
+    uploaded = 0
+
+    # Get the Pinecone index for adding documents
+    index = pc.Index(index_name)
+
+    for batch_num, i in enumerate(range(0, total, BATCH_SIZE), start=1):
+        batch = text_chunks[i : i + BATCH_SIZE]
+        retry_count = 0
+        max_retries = 5
+
+        while retry_count < max_retries:
+            try:
+                PineconeVectorStore.from_documents(
+                    documents=batch,
+                    embedding=embeddings,
+                    index_name=index_name
+                )
+                uploaded += len(batch)
+                print(f"  Batch {batch_num}: uploaded {uploaded}/{total} chunks")
+                break
+            except Exception as e:
+                retry_count += 1
+                err_msg = str(e).lower()
+                if "quota" in err_msg or "rate" in err_msg or "resource_exhausted" in err_msg or "429" in err_msg:
+                    wait_time = min(60 * retry_count, 120)
+                    print(f"  Rate limited on batch {batch_num}, waiting {wait_time}s (retry {retry_count}/{max_retries})...")
+                    time.sleep(wait_time)
+                else:
+                    print(f"  Error on batch {batch_num}: {e}")
+                    if retry_count >= max_retries:
+                        print(f"  FAILED batch {batch_num} after {max_retries} retries. Continuing...")
+                    else:
+                        time.sleep(10)
+
+        # Rate-limit pacing
+        if batch_num % LONG_PAUSE_EVERY == 0:
+            print(f"  Pausing {LONG_PAUSE_SECS}s to respect rate limits...")
+            time.sleep(LONG_PAUSE_SECS)
+        else:
+            time.sleep(DELAY_BETWEEN)
+
+    print(f"Successfully uploaded {uploaded}/{total} chunks to Pinecone.")
