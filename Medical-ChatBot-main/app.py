@@ -9,8 +9,17 @@ from langchain.memory import ConversationBufferWindowMemory
 from dotenv import load_dotenv
 from src.prompt import *
 import os
+import re
 import logging
 from pinecone import Pinecone
+
+
+# ─── Language Detection ───────────────────────────────────────────────────────
+def detect_language(text: str) -> str:
+    """Detect if text is primarily Arabic or English based on character counts."""
+    arabic_chars = len(re.findall(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]', text))
+    latin_chars = len(re.findall(r'[a-zA-Z]', text))
+    return "Arabic" if arabic_chars > latin_chars else "English"
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -64,10 +73,11 @@ memory = ConversationBufferWindowMemory(
     k=5
 )
 
-# ─── Prompt template with RAG context + chat history ─────────────────────────
+# ─── Prompt template with RAG context + chat history + language enforcement ──
 prompt = ChatPromptTemplate.from_messages([
     ("system", system_prompt),
     ("placeholder", "{chat_history}"),
+    ("system", "LANGUAGE ENFORCEMENT (NON-NEGOTIABLE): The user's current message is written in {detected_language}. You MUST respond ENTIRELY in {detected_language}. Every single word — headings, bullets, explanations, doctor names, disclaimers, and warnings — MUST be in {detected_language}. If the retrieved medical context is in a different language, translate the relevant information into {detected_language}. VIOLATION OF THIS RULE IS ABSOLUTELY FORBIDDEN."),
     ("human", "{input}")
 ])
 
@@ -91,13 +101,18 @@ def chat():
 
     logger.info("User: %s", msg)
 
+    # Detect user's language for response enforcement
+    detected_lang = detect_language(msg)
+    logger.info("Detected language: %s", detected_lang)
+
     # Load previous conversation from memory
     previous_context = memory.load_memory_variables({})
 
     try:
         response = rag_chain.invoke({
             "input": msg,
-            "chat_history": previous_context.get("chat_history", [])
+            "chat_history": previous_context.get("chat_history", []),
+            "detected_language": detected_lang
         })
 
         answer = response["answer"]
