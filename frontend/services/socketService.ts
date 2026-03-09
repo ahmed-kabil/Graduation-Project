@@ -30,10 +30,16 @@ export interface SocketErrorMessage {
 /**
  * Socket Service for real-time messaging
  */
+export interface MessagesReadData {
+  conversation_id: string;
+  reader_id: string;
+}
+
 class SocketService {
   private socket: Socket | null = null;
   private docPatMessageHandlers: ((message: SocketMessage) => void)[] = [];
   private docNurMessageHandlers: ((message: SocketMessage) => void)[] = [];
+  private messagesReadHandlers: ((data: MessagesReadData) => void)[] = [];
   private errorHandlers: ((error: SocketErrorMessage) => void)[] = [];
   private connectListeners: (() => void)[] = [];
 
@@ -85,6 +91,11 @@ class SocketService {
       console.error('Socket error:', data);
       this.errorHandlers.forEach(handler => handler(data));
     });
+
+    this.socket.on('messagesRead', (data: MessagesReadData) => {
+      console.log('📩 Messages read event received:', data);
+      this.messagesReadHandlers.forEach(handler => handler(data));
+    });
   }
 
   /**
@@ -96,6 +107,7 @@ class SocketService {
       this.socket = null;
       this.docPatMessageHandlers = [];
       this.docNurMessageHandlers = [];
+      this.messagesReadHandlers = [];
       this.errorHandlers = [];
       this.connectListeners = [];
     }
@@ -164,8 +176,25 @@ class SocketService {
    * Emit a messagesRead event so the other party sees read receipts in real-time
    */
   emitMessagesRead(conversationId: string, readerId: string): void {
-    if (!this.socket?.connected) return;
-    this.socket.emit('messagesRead', { conversation_id: conversationId, reader_id: readerId });
+    this.whenConnected(() => {
+      if (this.socket?.connected) {
+        this.socket.emit('messagesRead', { conversation_id: conversationId, reader_id: readerId });
+      }
+    });
+  }
+
+  /**
+   * Add a handler for messagesRead events
+   */
+  onMessagesRead(handler: (data: MessagesReadData) => void): void {
+    this.messagesReadHandlers.push(handler);
+  }
+
+  /**
+   * Remove a messagesRead handler
+   */
+  offMessagesRead(handler: (data: MessagesReadData) => void): void {
+    this.messagesReadHandlers = this.messagesReadHandlers.filter(h => h !== handler);
   }
 
   /**

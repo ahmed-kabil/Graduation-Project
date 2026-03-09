@@ -24,10 +24,14 @@ const DoctorMessagingView: React.FC<{ nurse: Nurse }> = ({ nurse }) => {
   type DocConvoSummary = { conversation: DocNurConversation; messages: any[]; unreadCount: number };
   const [conversations, setConversations] = useState<DocConvoSummary[]>([]);
   const [selectedConvo, setSelectedConvo] = useState<DocNurConversation | null>(null);
+  const selectedConvoRef = useRef<DocNurConversation | null>(null);
   const [messages, setMessages] = useState<DoctorPatientMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Keep ref in sync so socket handlers always read the latest selected conversation
+  useEffect(() => { selectedConvoRef.current = selectedConvo; }, [selectedConvo]);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -81,6 +85,7 @@ const DoctorMessagingView: React.FC<{ nurse: Nurse }> = ({ nurse }) => {
     };
     joinAllDocConvos();
 
+    // Handle incoming messages — reads selectedConvo from ref to avoid stale closures
     const handleIncoming = (socketMsg: SocketMessage) => {
       const newMessage: DoctorPatientMessage = {
         id: socketMsg._id || `msg-${Date.now()}`,
@@ -91,8 +96,9 @@ const DoctorMessagingView: React.FC<{ nurse: Nurse }> = ({ nurse }) => {
         read: socketMsg.read || false,
       };
 
-      if (selectedConvo) {
-        const isRelevant = socketMsg.conversation_id === selectedConvo.conversation_id;
+      const convo = selectedConvoRef.current;
+      if (convo) {
+        const isRelevant = socketMsg.conversation_id === convo.conversation_id;
         if (isRelevant) {
           setMessages(prev => {
             if (prev.some(m => m.id === newMessage.id)) return prev;
@@ -102,19 +108,20 @@ const DoctorMessagingView: React.FC<{ nurse: Nurse }> = ({ nurse }) => {
           });
           if (socketMsg.sender_id !== nurse.id) {
             chatService.markMessagesAsRead({
-              conversation_id: selectedConvo.conversation_id,
+              conversation_id: convo.conversation_id,
               user_id: nurse.id,
             });
-            socketService.emitMessagesRead(selectedConvo.conversation_id, nurse.id);
+            socketService.emitMessagesRead(convo.conversation_id, nurse.id);
           }
         }
       }
       fetchConversations();
     };
 
-    // Listen for read receipts from doctor
+    // Listen for read receipts from doctor — uses ref for latest selectedConvo
     const handleDocRead = (data: { conversation_id: string; reader_id: string }) => {
-      if (selectedConvo && data.reader_id !== nurse.id && data.conversation_id === selectedConvo.conversation_id) {
+      const convo = selectedConvoRef.current;
+      if (convo && data.reader_id !== nurse.id && data.conversation_id === convo.conversation_id) {
         setMessages(prev => prev.map(m =>
           m.senderId === nurse.id && !m.read ? { ...m, read: true } : m
         ));
@@ -122,9 +129,10 @@ const DoctorMessagingView: React.FC<{ nurse: Nurse }> = ({ nurse }) => {
     };
 
     socketService.onDocNurMessage(handleIncoming);
-    socketService.on('messagesRead', handleDocRead);
-    return () => { socketService.offDocNurMessage(handleIncoming); socketService.off('messagesRead', handleDocRead); };
-  }, [nurse.id, selectedConvo, fetchConversations]);
+    socketService.onMessagesRead(handleDocRead);
+    return () => { socketService.offDocNurMessage(handleIncoming); socketService.offMessagesRead(handleDocRead); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nurse.id, fetchConversations]);
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
 

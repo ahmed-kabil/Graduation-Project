@@ -331,12 +331,12 @@ const DoctorChatModal: React.FC<{
     };
 
     socketService.onDocPatMessage(handleIncomingMessage);
-    socketService.on('messagesRead', handleMessagesRead);
+    socketService.onMessagesRead(handleMessagesRead);
 
     // Cleanup on close
     return () => {
       socketService.offDocPatMessage(handleIncomingMessage);
-      socketService.off('messagesRead', handleMessagesRead);
+      socketService.offMessagesRead(handleMessagesRead);
     };
   }, [isOpen, patient.id, doctor.id, fetchMessages]);
 
