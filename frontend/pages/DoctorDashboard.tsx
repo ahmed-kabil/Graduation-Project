@@ -102,6 +102,8 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
               conversation_id: conversationId,
               user_id: doctor.id,
             });
+            // Emit read receipt so the patient sees ✓✓ instantly
+            socketService.emitMessagesRead(conversationId, doctor.id);
           }
         }
       }
@@ -110,11 +112,25 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
       fetchConversations();
     };
 
+    // Listen for read receipts — when a patient reads our messages, update ✓→✓✓
+    const handleMessagesRead = (data: { conversation_id: string; reader_id: string }) => {
+      if (selectedPatient && data.reader_id !== doctor.id) {
+        const expectedConvId = chatService.getConversationId(selectedPatient.id);
+        if (data.conversation_id === expectedConvId) {
+          setMessages(prev => prev.map(m =>
+            m.senderId === doctor.id && !m.read ? { ...m, read: true } : m
+          ));
+        }
+      }
+    };
+
     socketService.onDocPatMessage(handleIncomingMessage);
+    socketService.on('messagesRead', handleMessagesRead);
 
     // Cleanup on unmount
     return () => {
       socketService.offDocPatMessage(handleIncomingMessage);
+      socketService.off('messagesRead', handleMessagesRead);
     };
   }, [doctor.id, selectedPatient, fetchConversations]);
 
@@ -351,14 +367,25 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
               conversation_id: selectedNurseConvo.conversation_id,
               user_id: doctor.id,
             });
+            socketService.emitMessagesRead(selectedNurseConvo.conversation_id, doctor.id);
           }
         }
       }
       fetchConversations();
     };
 
+    // Listen for read receipts from nurse
+    const handleNurseRead = (data: { conversation_id: string; reader_id: string }) => {
+      if (selectedNurseConvo && data.reader_id !== doctor.id && data.conversation_id === selectedNurseConvo.conversation_id) {
+        setMessages(prev => prev.map(m =>
+          m.senderId === doctor.id && !m.read ? { ...m, read: true } : m
+        ));
+      }
+    };
+
     socketService.onDocNurMessage(handleIncoming);
-    return () => { socketService.offDocNurMessage(handleIncoming); };
+    socketService.on('messagesRead', handleNurseRead);
+    return () => { socketService.offDocNurMessage(handleIncoming); socketService.off('messagesRead', handleNurseRead); };
   }, [doctor.id, selectedNurseConvo, fetchConversations]);
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
@@ -542,9 +569,54 @@ export const DoctorDashboard: React.FC = () => {
         
         socketService.on('newAppointment', handleNewAppointment);
         
+        // Instant toast notifications for incoming patient messages via socket
+        const handlePatientMsgToast = (socketMsg: SocketMessage) => {
+            // Only show toast for messages FROM patients TO this doctor
+            if (socketMsg.receiver_id !== doctor.id || socketMsg.sender_id === doctor.id) return;
+            const msgId = socketMsg._id || `msg-${socketMsg.timestamp}`;
+            if (notifiedMessagesRef.current.has(msgId)) return;
+            notifiedMessagesRef.current.add(msgId);
+
+            const senderName = socketMsg.patient_name || 'a patient';
+            const preview = socketMsg.message.length > 40 ? `${socketMsg.message.substring(0, 40)}...` : socketMsg.message;
+            addToast(
+                `New message from ${senderName}: "${preview}"`,
+                'info',
+                () => {
+                    setActiveTab('Messages');
+                    setAutoSelectPatientId(socketMsg.sender_id);
+                    setSelectedPatient(null);
+                }
+            );
+        };
+
+        // Instant toast notifications for incoming nurse messages via socket
+        const handleNurseMsgToast = (socketMsg: SocketMessage) => {
+            if (socketMsg.receiver_id !== doctor.id || socketMsg.sender_id === doctor.id) return;
+            const msgId = socketMsg._id || `msg-${socketMsg.timestamp}`;
+            if (notifiedNurseMessagesRef.current.has(msgId)) return;
+            notifiedNurseMessagesRef.current.add(msgId);
+
+            const senderName = socketMsg.nurse_name || 'a nurse';
+            const preview = socketMsg.message.length > 40 ? `${socketMsg.message.substring(0, 40)}...` : socketMsg.message;
+            addToast(
+                `New message from Nurse ${senderName}: "${preview}"`,
+                'info',
+                () => {
+                    setActiveTab('Nurse Chat');
+                    setSelectedPatient(null);
+                }
+            );
+        };
+
+        socketService.onDocPatMessage(handlePatientMsgToast);
+        socketService.onDocNurMessage(handleNurseMsgToast);
+
         // Cleanup only on unmount
         return () => {
             socketService.off('newAppointment', handleNewAppointment);
+            socketService.offDocPatMessage(handlePatientMsgToast);
+            socketService.offDocNurMessage(handleNurseMsgToast);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [doctor.id]);

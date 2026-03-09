@@ -103,14 +103,25 @@ const DoctorMessagingView: React.FC<{ nurse: Nurse }> = ({ nurse }) => {
               conversation_id: selectedConvo.conversation_id,
               user_id: nurse.id,
             });
+            socketService.emitMessagesRead(selectedConvo.conversation_id, nurse.id);
           }
         }
       }
       fetchConversations();
     };
 
+    // Listen for read receipts from doctor
+    const handleDocRead = (data: { conversation_id: string; reader_id: string }) => {
+      if (selectedConvo && data.reader_id !== nurse.id && data.conversation_id === selectedConvo.conversation_id) {
+        setMessages(prev => prev.map(m =>
+          m.senderId === nurse.id && !m.read ? { ...m, read: true } : m
+        ));
+      }
+    };
+
     socketService.onDocNurMessage(handleIncoming);
-    return () => { socketService.offDocNurMessage(handleIncoming); };
+    socketService.on('messagesRead', handleDocRead);
+    return () => { socketService.offDocNurMessage(handleIncoming); socketService.off('messagesRead', handleDocRead); };
   }, [nurse.id, selectedConvo, fetchConversations]);
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
@@ -283,6 +294,34 @@ export const NurseDashboard: React.FC = () => {
         fetchDoctorMessages();
         const intervalId = setInterval(fetchDoctorMessages, 5000);
         return () => clearInterval(intervalId);
+    }, [nurse.id, addToast]);
+
+    // Socket-driven instant toast for incoming doctor messages
+    useEffect(() => {
+        socketService.connect();
+
+        const handleDoctorMsgToast = (msg: any) => {
+            if (msg.receiver_id === nurse.id && !notifiedMessagesRef.current.has(msg._id || msg.timestamp)) {
+                const msgId = msg._id || msg.timestamp;
+                notifiedMessagesRef.current.add(msgId);
+                const shortMessage = msg.message && msg.message.length > 40 ? `${msg.message.substring(0, 40)}...` : (msg.message || '');
+                const senderName = msg.sender_name || 'Doctor';
+                addToast(
+                    `New message from Dr. ${senderName}: "${shortMessage}"`,
+                    'info',
+                    () => {
+                        setActiveTab('Messages');
+                        setSelectedPatient(null);
+                    }
+                );
+            }
+        };
+
+        socketService.onDocNurMessage(handleDoctorMsgToast);
+
+        return () => {
+            socketService.off('receiveDocNurMessage', handleDoctorMsgToast);
+        };
     }, [nurse.id, addToast]);
     
     const sidebarItems = [

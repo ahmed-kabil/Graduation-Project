@@ -313,15 +313,27 @@ const DoctorChatModal: React.FC<{
             conversation_id: conversationId,
             user_id: patient.id,
           });
+          socketService.emitMessagesRead(conversationId, patient.id);
         }
       }
     };
 
+    // Listen for read receipts — when doctor reads our messages, update ✓→✓✓
+    const handleMessagesRead = (data: { conversation_id: string; reader_id: string }) => {
+      if (data.reader_id !== patient.id && data.conversation_id === conversationId) {
+        setMessages(prev => prev.map(m =>
+          m.senderId === patient.id && !m.read ? { ...m, read: true } : m
+        ));
+      }
+    };
+
     socketService.onDocPatMessage(handleIncomingMessage);
+    socketService.on('messagesRead', handleMessagesRead);
 
     // Cleanup on close
     return () => {
       socketService.offDocPatMessage(handleIncomingMessage);
+      socketService.off('messagesRead', handleMessagesRead);
     };
   }, [isOpen, patient.id, doctor.id, fetchMessages]);
 
@@ -487,7 +499,28 @@ export const PatientDashboard: React.FC = () => {
         // Join the patient's conversation room so newAppointment event reaches the doctor
         const conversationId = chatService.getConversationId(patient.id);
         socketService.joinConversation(conversationId);
-    }, [patient.id]);
+
+        // Instant toast when doctor sends a message via socket
+        const handleDoctorMsgToast = (socketMsg: SocketMessage) => {
+            if (socketMsg.receiver_id !== patient.id || socketMsg.sender_id === patient.id) return;
+            const msgId = socketMsg._id || `msg-${socketMsg.timestamp}`;
+            if (notifiedMessagesRef.current.has(msgId)) return;
+            notifiedMessagesRef.current.add(msgId);
+
+            const preview = socketMsg.message.length > 40 ? `${socketMsg.message.substring(0, 40)}...` : socketMsg.message;
+            addToast(
+                `New message from your doctor: "${preview}"`,
+                'info',
+                () => {
+                    setIsChatOpen(true);
+                    setActiveTab('Doctor Info');
+                }
+            );
+        };
+
+        socketService.onDocPatMessage(handleDoctorMsgToast);
+        return () => { socketService.offDocPatMessage(handleDoctorMsgToast); };
+    }, [patient.id, addToast]);
 
     useEffect(() => {
         if (!doctor) return;

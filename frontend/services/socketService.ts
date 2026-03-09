@@ -161,6 +161,14 @@ class SocketService {
   }
 
   /**
+   * Emit a messagesRead event so the other party sees read receipts in real-time
+   */
+  emitMessagesRead(conversationId: string, readerId: string): void {
+    if (!this.socket?.connected) return;
+    this.socket.emit('messagesRead', { conversation_id: conversationId, reader_id: readerId });
+  }
+
+  /**
    * Add a handler for incoming doctor-patient messages
    */
   onDocPatMessage(handler: (message: SocketMessage) => void): void {

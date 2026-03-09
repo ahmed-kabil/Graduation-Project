@@ -103,8 +103,15 @@ socket.on("newAppointment",async (data) => {
 
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
+    });
 
-
+    // Real-time read receipts: when a user marks messages as read,
+    // notify the conversation so the sender's UI can update instantly.
+    socket.on("messagesRead", (data) => {
+      // data = { conversation_id, reader_id }
+      if (data && data.conversation_id) {
+        io.to(data.conversation_id).emit("messagesRead", data);
+      }
     });
   });
 
