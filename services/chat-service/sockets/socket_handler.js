@@ -102,6 +102,12 @@ module.exports = (io) => {
       io.to(data.conversation_id).emit("newAppointment", data);
     });
 
+    // Handle appointment cancellation notification
+    socket.on("cancelAppointment", (data) => {
+      console.log("🗑️ Appointment cancellation notification:", data);
+      io.to(data.conversation_id).emit("cancelAppointment", data);
+    });
+
     /**
      * Real-time read receipts
      * When a user marks messages as read, broadcast to the conversation

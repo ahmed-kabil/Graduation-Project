@@ -41,13 +41,35 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       );
 
       if (existingAlertIndex > -1) {
+        const existingAlert = prevAlerts[existingAlertIndex];
         const updatedAlerts = [...prevAlerts];
-        updatedAlerts[existingAlertIndex] = newAlert;
+
+        // If the alert was already read (seen) or dismissed, assign a fresh ID
+        // so the badge increments again for the updated alert.
+        if (seenIds.has(existingAlert.id) || dismissedIds.has(existingAlert.id)) {
+          const freshId = `alert-${newAlert.patientId}-${newAlert.vital}-${Date.now()}`;
+          updatedAlerts[existingAlertIndex] = { ...newAlert, id: freshId };
+
+          // Clean up the old ID from seenIds and dismissedIds
+          setSeenIds(prev => {
+            const next = new Set(prev);
+            next.delete(existingAlert.id);
+            return next;
+          });
+          setDismissedIds(prev => {
+            if (!prev.has(existingAlert.id)) return prev;
+            const next = new Set(prev);
+            next.delete(existingAlert.id);
+            return next;
+          });
+        } else {
+          updatedAlerts[existingAlertIndex] = newAlert;
+        }
         return updatedAlerts;
       }
       return [newAlert, ...prevAlerts];
     });
-  }, []);
+  }, [seenIds, dismissedIds]);
   
   const removeAlert = useCallback((patientId: string, vitalName: Alert['vital']) => {
     setAlerts(prevAlerts => prevAlerts.filter(a => !(a.patientId === patientId && a.vital === vitalName)));

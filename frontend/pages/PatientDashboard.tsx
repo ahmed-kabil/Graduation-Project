@@ -228,7 +228,7 @@ const Chatbot: React.FC = () => {
                         type="text"
                         value={input}
                         onChange={e => setInput(e.target.value)}
-                        onKeyPress={e => e.key === 'Enter' && handleSend()}
+                        onKeyDown={e => e.key === 'Enter' && handleSend()}
                         placeholder="Type your message..."
                         dir="auto"
                         className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 text-sm transition-all"

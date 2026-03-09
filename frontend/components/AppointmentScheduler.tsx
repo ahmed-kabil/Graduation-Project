@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Patient, Doctor, Appointment } from '../types';
 import { appointmentService, BookAppointmentData } from '../services/appointmentService';
 import { api } from '../services/mockApi';
+import { socketService } from '../services/socketService';
+import { chatService } from '../services/chatService';
 
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>;
@@ -106,6 +108,25 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
             const cancelledApp = appointments.find(a => a._id === appointmentToCancel);
 
             await appointmentService.cancelAppointment(appointmentToCancel);
+
+            // Notify doctor in real-time that an appointment was cancelled
+            if (cancelledApp) {
+                try {
+                    const conversationId = chatService.getConversationId(cancelledApp.patient_id);
+                    const socket = socketService.getSocket();
+                    if (socket && socketService.isConnected()) {
+                        socket.emit('cancelAppointment', {
+                            patient_id: cancelledApp.patient_id,
+                            doctor_id: cancelledApp.doctor_id,
+                            date: cancelledApp.date,
+                            time: cancelledApp.time,
+                            conversation_id: conversationId,
+                        });
+                    }
+                } catch (err) {
+                    console.warn('Failed to emit cancelAppointment socket event:', err);
+                }
+            }
 
             // Optimistically update local state — mark as cancelled so it disappears from upcoming
             setAppointments(prev => prev.map(a =>

@@ -6,12 +6,10 @@ const CHATBOT_API_URL = backendUrl !== undefined ? `${backendUrl}/api/chatbot` :
 
 export const getChatbotResponse = async (message: string): Promise<string> => {
   try {
-    const formData = new FormData();
-    formData.append('msg', message);
-
     const response = await fetch(CHATBOT_API_URL, {
       method: 'POST',
-      body: formData,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ msg: message }),
     });
 
     if (!response.ok) {

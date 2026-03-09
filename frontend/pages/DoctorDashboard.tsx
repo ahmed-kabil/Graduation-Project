@@ -602,7 +602,24 @@ export const DoctorDashboard: React.FC = () => {
         };
         
         socketService.on('newAppointment', handleNewAppointment);
-        
+
+        // Listen for appointment cancellations to decrement the badge
+        const handleCancelAppointment = (data: any) => {
+            console.log('🗑️ Appointment cancellation received:', data);
+            setNewAppointmentCount(prev => Math.max(0, prev - 1));
+            addToast(
+                `Appointment cancelled${data.date ? ` (${data.date} at ${data.time})` : ''}`,
+                'info',
+                () => {
+                    setActiveTab('Appointments');
+                    setSelectedPatient(null);
+                    setNewAppointmentCount(0);
+                }
+            );
+        };
+
+        socketService.on('cancelAppointment', handleCancelAppointment);
+
         // Instant toast notifications for incoming patient messages via socket
         const handlePatientMsgToast = (socketMsg: SocketMessage) => {
             // Only show toast for messages FROM patients TO this doctor
@@ -649,6 +666,7 @@ export const DoctorDashboard: React.FC = () => {
         // Cleanup only on unmount
         return () => {
             socketService.off('newAppointment', handleNewAppointment);
+            socketService.off('cancelAppointment', handleCancelAppointment);
             socketService.offDocPatMessage(handlePatientMsgToast);
             socketService.offDocNurMessage(handleNurseMsgToast);
         };
