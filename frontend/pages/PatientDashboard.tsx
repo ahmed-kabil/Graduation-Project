@@ -258,6 +258,9 @@ const DoctorChatModal: React.FC<{
     const conversation = await api.getConversation(patient.id, doctor.id);
     setMessages(conversation);
     await api.markMessagesAsRead(patient.id, patient.id);
+    // Emit read receipt so the doctor sees ✓✓ instantly
+    const convId = chatService.getConversationId(patient.id);
+    socketService.emitMessagesRead(convId, patient.id);
   }, [patient.id, doctor.id]);
 
   // Initialize socket connection and event handlers
@@ -503,7 +506,7 @@ export const PatientDashboard: React.FC = () => {
         // Instant toast when doctor sends a message via socket
         const handleDoctorMsgToast = (socketMsg: SocketMessage) => {
             if (socketMsg.receiver_id !== patient.id || socketMsg.sender_id === patient.id) return;
-            const msgId = socketMsg._id || `msg-${socketMsg.timestamp}`;
+            const msgId = socketMsg._id || `msg-${Date.now()}-${Math.random()}`;
             if (notifiedMessagesRef.current.has(msgId)) return;
             notifiedMessagesRef.current.add(msgId);
 

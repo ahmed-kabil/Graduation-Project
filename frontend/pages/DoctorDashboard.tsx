@@ -39,6 +39,9 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
     const conversation = await api.getConversation(patientId, doctor.id);
     setMessages(conversation);
     await api.markMessagesAsRead(patientId, doctor.id);
+    // Emit read receipt so the patient sees ✓✓ instantly
+    const convId = chatService.getConversationId(patientId);
+    socketService.emitMessagesRead(convId, doctor.id);
     await fetchConversations(); 
   }, [doctor.id, fetchConversations]);
 
@@ -322,6 +325,8 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
       })));
       // Mark as read
       await chatService.markMessagesAsRead({ conversation_id: conversationId, user_id: doctor.id });
+      // Emit read receipt so the nurse sees ✓✓ instantly
+      socketService.emitMessagesRead(conversationId, doctor.id);
       fetchConversations();
     } catch (err) {
       console.error('Failed to fetch messages:', err);
@@ -544,6 +549,19 @@ export const DoctorDashboard: React.FC = () => {
         
         // Mark doctor as online so backend knows which socket to send notifications to
         socketService.goOnline(doctor.id);
+
+        // Join ALL conversation rooms on mount so toast handlers and read receipts work
+        const joinAllRooms = async () => {
+            try {
+                const patConvos = await chatService.getDoctorConversations(doctor.id);
+                patConvos.forEach(conv => socketService.joinConversation(conv.conversation_id));
+                const nurConvos = await chatService.getDoctorNurseConversations(doctor.id);
+                nurConvos.forEach(conv => socketService.joinConversation(conv.conversation_id));
+            } catch (err) {
+                console.error('Failed to join conversation rooms:', err);
+            }
+        };
+        joinAllRooms();
         
         // Listen for new appointment events
         const handleNewAppointment = (data: any) => {
@@ -573,7 +591,7 @@ export const DoctorDashboard: React.FC = () => {
         const handlePatientMsgToast = (socketMsg: SocketMessage) => {
             // Only show toast for messages FROM patients TO this doctor
             if (socketMsg.receiver_id !== doctor.id || socketMsg.sender_id === doctor.id) return;
-            const msgId = socketMsg._id || `msg-${socketMsg.timestamp}`;
+            const msgId = socketMsg._id || `msg-${Date.now()}-${Math.random()}`;
             if (notifiedMessagesRef.current.has(msgId)) return;
             notifiedMessagesRef.current.add(msgId);
 
@@ -593,7 +611,7 @@ export const DoctorDashboard: React.FC = () => {
         // Instant toast notifications for incoming nurse messages via socket
         const handleNurseMsgToast = (socketMsg: SocketMessage) => {
             if (socketMsg.receiver_id !== doctor.id || socketMsg.sender_id === doctor.id) return;
-            const msgId = socketMsg._id || `msg-${socketMsg.timestamp}`;
+            const msgId = socketMsg._id || `msg-${Date.now()}-${Math.random()}`;
             if (notifiedNurseMessagesRef.current.has(msgId)) return;
             notifiedNurseMessagesRef.current.add(msgId);
 

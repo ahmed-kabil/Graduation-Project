@@ -58,6 +58,8 @@ const DoctorMessagingView: React.FC<{ nurse: Nurse }> = ({ nurse }) => {
         read: m.read,
       })));
       await chatService.markMessagesAsRead({ conversation_id: conversationId, user_id: nurse.id });
+      // Emit read receipt so the doctor sees ✓✓ instantly
+      socketService.emitMessagesRead(conversationId, nurse.id);
       fetchConversations();
     } catch (err) {
       console.error('Failed to fetch messages:', err);
@@ -299,28 +301,40 @@ export const NurseDashboard: React.FC = () => {
     // Socket-driven instant toast for incoming doctor messages
     useEffect(() => {
         socketService.connect();
+        socketService.goOnline(nurse.id);
+
+        // Join ALL conversation rooms so toast handlers receive events
+        const joinAllRooms = async () => {
+            try {
+                const convos = await chatService.getNurseConversations(nurse.id);
+                convos.forEach(conv => socketService.joinConversation(conv.conversation_id));
+            } catch (err) {
+                console.error('Failed to join conversation rooms:', err);
+            }
+        };
+        joinAllRooms();
 
         const handleDoctorMsgToast = (msg: any) => {
-            if (msg.receiver_id === nurse.id && !notifiedMessagesRef.current.has(msg._id || msg.timestamp)) {
-                const msgId = msg._id || msg.timestamp;
-                notifiedMessagesRef.current.add(msgId);
-                const shortMessage = msg.message && msg.message.length > 40 ? `${msg.message.substring(0, 40)}...` : (msg.message || '');
-                const senderName = msg.sender_name || 'Doctor';
-                addToast(
-                    `New message from Dr. ${senderName}: "${shortMessage}"`,
-                    'info',
-                    () => {
-                        setActiveTab('Messages');
-                        setSelectedPatient(null);
-                    }
-                );
-            }
+            if (msg.receiver_id !== nurse.id || msg.sender_id === nurse.id) return;
+            const msgId = msg._id || `msg-${Date.now()}-${Math.random()}`;
+            if (notifiedMessagesRef.current.has(msgId)) return;
+            notifiedMessagesRef.current.add(msgId);
+            const shortMessage = msg.message && msg.message.length > 40 ? `${msg.message.substring(0, 40)}...` : (msg.message || '');
+            const senderName = msg.doctor_name || msg.sender_name || 'Doctor';
+            addToast(
+                `New message from Dr. ${senderName}: "${shortMessage}"`,
+                'info',
+                () => {
+                    setActiveTab('Messages');
+                    setSelectedPatient(null);
+                }
+            );
         };
 
         socketService.onDocNurMessage(handleDoctorMsgToast);
 
         return () => {
-            socketService.off('receiveDocNurMessage', handleDoctorMsgToast);
+            socketService.offDocNurMessage(handleDoctorMsgToast);
         };
     }, [nurse.id, addToast]);
     

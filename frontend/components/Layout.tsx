@@ -8,10 +8,10 @@ interface LayoutProps {
   activeItem: string;
 }
 
-const LogoIcon = () => (
-    <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+const LogoIcon = ({ size = 32 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M40 70 C40 70 8 48 8 28 C8 16 17 8 28 8 C33.5 8 38 10.5 40 14 C42 10.5 46.5 8 52 8 C63 8 72 16 72 28 C72 48 40 70 40 70Z" fill="url(#sidebarHeartGrad)" />
-        <polyline points="12,40 26,40 30,40 34,32 38,50 42,28 46,46 50,36 54,40 68,40" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points="12,40 26,40 30,40 34,32 38,50 42,28 46,46 50,36 54,40 68,40" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
         <defs><linearGradient id="sidebarHeartGrad" x1="8" y1="8" x2="72" y2="70" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#0ea5e9"/><stop offset="50%" stopColor="#0d9488"/><stop offset="100%" stopColor="#0ea5e9"/></linearGradient></defs>
     </svg>
 );
@@ -109,9 +109,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, sidebarItems, activeIt
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Mobile Header */}
           <header className="lg:hidden h-16 bg-white/80 dark:bg-slate-800/90 backdrop-blur-lg border-b border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between px-4">
-            <div className="flex items-center">
-              <LogoIcon />
-              <h2 className="ml-2 text-lg font-bold text-slate-800 dark:text-white">NABD</h2>
+            <div className="flex items-center gap-2">
+              <LogoIcon size={36} />
+              <div>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white leading-none">NABD</h2>
+                <p className="text-[8px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] leading-none mt-0.5">Hospital</p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-xs shadow-sm">
