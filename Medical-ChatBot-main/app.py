@@ -90,14 +90,18 @@ def index():
 
 @app.route("/get", methods=["GET", "POST"])
 def chat():
-    msg = request.form.get("msg", "").strip()
+    # Accept both JSON and form-encoded data (JSON needed for Capacitor mobile app)
+    if request.is_json:
+        msg = (request.json or {}).get("msg", "").strip()
+    else:
+        msg = request.form.get("msg", "").strip()
 
     # Input validation
     if not msg:
-        return "Please enter a message."
+        return jsonify({"answer": "Please enter a message."})
 
     if len(msg) > 2000:
-        return "Your message is too long. Please keep it under 2000 characters."
+        return jsonify({"answer": "Your message is too long. Please keep it under 2000 characters."})
 
     logger.info("User: %s", msg)
 
@@ -133,18 +137,18 @@ def chat():
         # Save Q&A to memory
         memory.save_context({"input": msg}, {"output": answer})
 
-        return str(answer)
+        return jsonify({"answer": str(answer)})
 
     except RuntimeError as e:
         # All API keys exhausted
         if "exhausted" in str(e).lower():
             logger.error("All Gemini API keys exhausted: %s", e)
-            return "All API keys are currently exhausted. Please try again later."
+            return jsonify({"answer": "All API keys are currently exhausted. Please try again later."})
         raise
 
     except Exception as e:
         logger.error("Error generating response: %s", e, exc_info=True)
-        return "I'm sorry, I'm temporarily unable to process your request. Please try again in a moment."
+        return jsonify({"answer": "I'm sorry, I'm temporarily unable to process your request. Please try again in a moment."})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=9090, debug=True)
