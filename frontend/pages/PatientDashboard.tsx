@@ -532,28 +532,12 @@ export const PatientDashboard: React.FC = () => {
             const messages = await api.getConversation(patient.id, doctor.id);
             const unreadFromDoctor = messages.filter(m => m.senderId === doctor.id && !m.read);
             setUnreadDoctorMessages(unreadFromDoctor.length);
-            if (messages.length > 0) {
-                const lastMessage = messages[messages.length - 1];
-
-                if (lastMessage && lastMessage.senderId === doctor.id && !lastMessage.read && !notifiedMessagesRef.current.has(lastMessage.id)) {
-                     const shortMessage = lastMessage.text.length > 40 ? `${lastMessage.text.substring(0, 40)}...` : lastMessage.text;
-                     addToast(
-                         `New message from Dr. ${doctor.name.split(' ').pop()}: "${shortMessage}"`,
-                         'info',
-                         () => {
-                             setIsChatOpen(true);
-                             setActiveTab('Doctor Info');
-                         }
-                     );
-                     notifiedMessagesRef.current.add(lastMessage.id);
-                }
-            }
         };
-        
+        checkMessages();
         const intervalId = setInterval(checkMessages, 5000);
         return () => clearInterval(intervalId);
 
-    }, [patient.id, doctor, addToast]);
+    }, [patient.id, doctor]);
     
     const sidebarItems = [
         { name: 'Vitals', icon: <VitalsIcon/>, onClick: () => setActiveTab('Vitals') },

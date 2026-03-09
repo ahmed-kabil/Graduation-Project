@@ -270,7 +270,7 @@ export const NurseDashboard: React.FC = () => {
         api.getAllPatients().then(setPatients);
     }, []);
 
-    // Poll for doctor messages — send toast notifications for unread messages
+    // Poll for unread message badge count
     useEffect(() => {
         const fetchDoctorMessages = async () => {
             try {
@@ -280,21 +280,6 @@ export const NurseDashboard: React.FC = () => {
                     const msgs = await chatService.getConversationMessages(conv.conversation_id);
                     const unreadMsgs = msgs.filter(m => m.receiver_id === nurse.id && !m.read);
                     totalUnread += unreadMsgs.length;
-                    if (unreadMsgs.length > 0) {
-                        const lastUnread = unreadMsgs[unreadMsgs.length - 1];
-                        if (!notifiedMessagesRef.current.has(lastUnread._id)) {
-                            const shortMessage = lastUnread.message.length > 40 ? `${lastUnread.message.substring(0, 40)}...` : lastUnread.message;
-                            addToast(
-                                `New message from Dr. ${conv.doctor_name}: "${shortMessage}"`,
-                                'info',
-                                () => {
-                                    setActiveTab('Messages');
-                                    setSelectedPatient(null);
-                                }
-                            );
-                            notifiedMessagesRef.current.add(lastUnread._id);
-                        }
-                    }
                 }
                 setUnreadMessageCount(totalUnread);
             } catch (err) {
@@ -304,7 +289,7 @@ export const NurseDashboard: React.FC = () => {
         fetchDoctorMessages();
         const intervalId = setInterval(fetchDoctorMessages, 5000);
         return () => clearInterval(intervalId);
-    }, [nurse.id, addToast]);
+    }, [nurse.id]);
 
     // Socket-driven instant toast for incoming doctor messages
     useEffect(() => {

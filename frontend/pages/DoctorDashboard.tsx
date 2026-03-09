@@ -664,23 +664,7 @@ export const DoctorDashboard: React.FC = () => {
             const convos = await api.getDoctorConversations(doctor.id);
             setConversations(convos);
 
-            convos.forEach(convo => {
-                if (convo.unreadCount > 0 && convo.lastMessage.senderId !== doctor.id && !notifiedMessagesRef.current.has(convo.lastMessage.id)) {
-                    const shortMessage = convo.lastMessage.text.length > 40 ? `${convo.lastMessage.text.substring(0, 40)}...` : convo.lastMessage.text;
-                    addToast(
-                        `New message from ${convo.patient.name}: "${shortMessage}"`,
-                        'info',
-                        () => {
-                            setActiveTab('Messages');
-                            setAutoSelectPatientId(convo.patient.id);
-                            setSelectedPatient(null);
-                        }
-                    );
-                    notifiedMessagesRef.current.add(convo.lastMessage.id);
-                }
-            });
-
-            // Also poll nurse conversations for notifications
+            // Poll nurse conversations for unread badge count
             try {
                 const nurseConvos = await chatService.getDoctorNurseConversations(doctor.id);
                 let totalNurseUnread = 0;
@@ -688,21 +672,6 @@ export const DoctorDashboard: React.FC = () => {
                     const msgs = await chatService.getConversationMessages(conv.conversation_id);
                     const unreadMsgs = msgs.filter(m => m.receiver_id === doctor.id && !m.read);
                     totalNurseUnread += unreadMsgs.length;
-                    if (unreadMsgs.length > 0) {
-                        const lastUnread = unreadMsgs[unreadMsgs.length - 1];
-                        if (!notifiedNurseMessagesRef.current.has(lastUnread._id)) {
-                            const shortMessage = lastUnread.message.length > 40 ? `${lastUnread.message.substring(0, 40)}...` : lastUnread.message;
-                            addToast(
-                                `New message from Nurse ${conv.nurse_name}: "${shortMessage}"`,
-                                'info',
-                                () => {
-                                    setActiveTab('Nurse Chat');
-                                    setSelectedPatient(null);
-                                }
-                            );
-                            notifiedNurseMessagesRef.current.add(lastUnread._id);
-                        }
-                    }
                 }
                 setNurseUnreadCount(totalNurseUnread);
             } catch (err) {
@@ -712,7 +681,7 @@ export const DoctorDashboard: React.FC = () => {
         fetchConvos();
         const intervalId = setInterval(fetchConvos, 5000);
         return () => clearInterval(intervalId);
-    }, [doctor.id, addToast]);
+    }, [doctor.id]);
 
     const handleSelectPatientFromAppointment = (patientId: string) => {
         const patient = patients.find(p => p.id === patientId);
