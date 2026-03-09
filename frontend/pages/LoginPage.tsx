@@ -86,27 +86,28 @@ export const LoginPage: React.FC = () => {
     // Show a general error only when there's no field-specific error
     const generalError = error && !errorField && !Object.keys(localErrors).length ? error : null;
 
-    const baseInputClasses = "w-full px-4 py-2 text-slate-700 dark:text-slate-200 bg-white/80 dark:bg-slate-700/80 border rounded-md focus:outline-none focus:ring-2 transition";
-    const normalBorder = "border-slate-300 dark:border-slate-600 focus:ring-blue-500 focus:border-transparent";
-    const errorBorder = "border-red-500 focus:ring-red-500 focus:border-red-500 bg-red-50/80";
-    const buttonClasses = "w-full py-3 px-4 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 transition-colors";
+    const baseInputClasses = "w-full px-4 py-3 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700/80 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 text-sm";
+    const normalBorder = "border-slate-200 dark:border-slate-600 focus:ring-blue-500/40 focus:border-blue-500";
+    const errorBorder = "border-red-400 focus:ring-red-500/40 focus:border-red-400 bg-red-50/80";
+    const buttonClasses = "w-full py-3 px-4 font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-60 transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40";
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            {/* Full-screen background image */}
-            <div
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                style={{ backgroundImage: "url('/hospital-bg.jpg')" }}
-            />
-            {/* Subtle overlay for readability */}
-            <div className="absolute inset-0 bg-white/30 dark:bg-black/50 backdrop-blur-[2px]" />
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-sky-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200/30 dark:bg-blue-900/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"/>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-sky-200/30 dark:bg-sky-900/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3"/>
 
-            {/* Login card with transparency */}
-            <div className="relative z-10 w-full max-w-md p-8 space-y-6 bg-white/80 dark:bg-slate-800/85 backdrop-blur-md rounded-xl shadow-2xl border border-white/40 dark:border-slate-700/50">
-                <div className="text-center mb-6">
-                    <HeartPulseIcon />
-                    <h2 className="text-3xl font-bold text-slate-800 dark:text-white mt-4">NABD Medical Portal</h2>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">Sign in to access your dashboard</p>
+            {/* Login card */}
+            <div className="relative z-10 w-full max-w-md p-8 space-y-6 bg-white/80 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-black/30 border border-white/60 dark:border-slate-700/50">
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                            <polyline points="3.5 12 8.5 12 10 10 12 14 14 10 15.5 12 20.5 12"/>
+                        </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Welcome back</h2>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Sign in to NABD Medical Portal</p>
                 </div>
                 <form onSubmit={handleLogin} noValidate className="space-y-4">
                     {/* Email field */}
@@ -162,7 +163,7 @@ export const LoginPage: React.FC = () => {
 
                     {/* General error (e.g. network / unexpected) */}
                     {generalError && (
-                        <div className="flex items-center p-3 bg-red-100/90 border border-red-200 text-red-700 text-sm rounded-md" role="alert">
+                        <div className="flex items-center p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm rounded-xl" role="alert">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 mr-2 flex-shrink-0">
                                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                                 <line x1="12" y1="9" x2="12" y2="13"></line>
@@ -173,7 +174,12 @@ export const LoginPage: React.FC = () => {
                     )}
                     
                     <button type="submit" className={buttonClasses} disabled={isLoading}>
-                        {isLoading ? 'Signing In...' : 'Sign in'}
+                        {isLoading ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                Signing In...
+                            </span>
+                        ) : 'Sign in'}
                     </button>
                 </form>
             </div>

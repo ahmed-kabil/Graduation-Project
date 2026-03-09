@@ -12,8 +12,8 @@ const GENDER_COLORS = ['#38bdf8', '#f472b6', '#a78bfa']; // Sky, Pink, Violet
 const CASE_COLORS = ['#34d399', '#fbbf24', '#60a5fa', '#c084fc']; // Emerald, Amber, Blue, Purple
 
 const ChartCard: React.FC<{ title: string; children: React.ReactNode, className?: string }> = ({ title, children, className = '' }) => (
-    <div className={`bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md ${className}`}>
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">{title}</h3>
+    <div className={`bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 ${className}`}>
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">{title}</h3>
         {children}
     </div>
 );

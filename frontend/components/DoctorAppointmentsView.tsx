@@ -85,9 +85,9 @@ export const DoctorAppointmentsView: React.FC<DoctorAppointmentsViewProps> = ({ 
     const sortedDates = Object.keys(appointments).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] flex flex-col">
-            <h3 className="text-2xl font-semibold text-slate-800 dark:text-white mb-6 border-b pb-4">Upcoming Appointments</h3>
-            <div className="flex-1 overflow-y-auto">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-6 h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] flex flex-col">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">Upcoming Appointments</h3>
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {sortedDates.length > 0 ? (
                     <div className="space-y-6">
                         {sortedDates.map(date => (
@@ -97,7 +97,7 @@ export const DoctorAppointmentsView: React.FC<DoctorAppointmentsViewProps> = ({ 
                                     {appointments[date].map(app => (
                                         <div 
                                             key={app._id} 
-                                            className="w-full text-left p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 hover:bg-sky-50 dark:hover:bg-sky-900/30 transition-all duration-200"
+                                            className="w-full text-left p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
                                         >
                                             <div className="flex justify-between items-start">
                                                 <button
@@ -109,7 +109,7 @@ export const DoctorAppointmentsView: React.FC<DoctorAppointmentsViewProps> = ({ 
                                                     <p className="text-sm text-slate-600 dark:text-slate-400 mt-1"><strong>Reason:</strong> {app.reason}</p>
                                                 </button>
                                                 <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                                    <div className="flex items-center text-sm font-medium bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 px-3 py-1 rounded-full">
+                                                    <div className="flex items-center text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">
                                                         <ClockIcon />
                                                         {app.time}
                                                     </div>

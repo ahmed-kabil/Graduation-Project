@@ -182,11 +182,11 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
         }
 
         return (
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50">
                 <div className="flex items-center justify-between mb-4">
-                    <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"><ChevronLeftIcon /></button>
+                    <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><ChevronLeftIcon /></button>
                     <h3 className="font-semibold text-lg text-slate-800 dark:text-white">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
-                    <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"><ChevronRightIcon /></button>
+                    <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"><ChevronRightIcon /></button>
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-500 dark:text-slate-400 mb-2">
                     <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
@@ -226,8 +226,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                 <div className="lg:col-span-2 space-y-6">
                     {renderCalendar()}
                     {selectedDate && (
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
-                            <h3 className="font-semibold mb-4 text-slate-800 dark:text-white">Available Slots for {selectedDate.toLocaleDateString()}</h3>
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50">
                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                 {AVAILABLE_TIMES.map(time => {
                                     const isBooked = bookedTimes.includes(time);
@@ -251,7 +250,7 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                                             disabled={isDisabled}
                                             onClick={() => setSelectedTime(time)}
                                             className={`
-                                                p-3 rounded-lg text-sm font-medium transition-colors duration-200
+                                                p-3 rounded-xl text-sm font-medium transition-colors duration-200
                                                 ${isDisabled ? 'bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed' : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white hover:bg-blue-200'}
                                                 ${selectedTime === time ? 'bg-blue-600 text-white font-bold ring-2 ring-offset-2 ring-blue-500' : ''}
                                             `}
@@ -264,27 +263,27 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                         </div>
                     )}
                     {selectedTime && (
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50">
                              <h3 className="font-semibold mb-2 text-slate-800 dark:text-white">Book for {selectedTime} on {selectedDate?.toLocaleDateString()}</h3>
                              <textarea 
                                 value={reason} 
                                 onChange={(e) => setReason(e.target.value)} 
-                                className="w-full p-2 border border-slate-300 dark:border-slate-600 rounded-md mb-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                                className="w-full p-3 border border-slate-200 dark:border-slate-600 rounded-xl mb-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40"
                                 placeholder="Reason for visit..."
                             ></textarea>
                             {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
                             {success && <p className="text-emerald-600 text-sm mb-3">{success}</p>}
-                            <button onClick={handleBooking} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Confirm Booking</button>
+                            <button onClick={handleBooking} className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/20 transition-all">Confirm Booking</button>
                         </div>
                     )}
                 </div>
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
-                     <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Your Appointments</h3>
-                     <div className="space-y-4 max-h-[calc(100vh-16rem)] overflow-y-auto">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50">
+                     <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Your Appointments</h3>
+                     <div className="space-y-4 max-h-[calc(100vh-16rem)] overflow-y-auto custom-scrollbar">
                         {upcomingAppointments.length > 0 ? upcomingAppointments.map(app => {
                             const appDate = app.date.includes('T') ? app.date.split('T')[0] : app.date;
                             return (
-                            <div key={app._id} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700">
+                            <div key={app._id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700">
                                  <div className="flex items-center justify-between mb-1">
                                     <div className="flex items-center text-slate-700 dark:text-slate-300 font-semibold">
                                         <CalendarIcon />
@@ -306,12 +305,12 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
 
             {showCancelConfirm && (
                 <div 
-                    className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                     aria-labelledby="cancel-title"
                     role="dialog"
                     aria-modal="true"
                 >
-                  <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-sm transform transition-all animate-fade-in-scale">
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-sm border border-slate-100 dark:border-slate-700/50 transform transition-all animate-fade-in-scale">
                     <style>{`
                         @keyframes fade-in-scale {
                             from { transform: scale(0.95); opacity: 0; }
@@ -325,17 +324,17 @@ export const AppointmentScheduler: React.FC<{ patient: Patient }> = ({ patient }
                             Are you sure you want to cancel this appointment? This action cannot be undone.
                         </p>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
+                    <div className="bg-slate-50/80 dark:bg-slate-700/50 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
                         <button
                             type="button"
-                            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                             onClick={() => setShowCancelConfirm(false)}
                         >
                             No
                         </button>
                         <button
                             type="button"
-                            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors"
                             onClick={handleConfirmCancel}
                         >
                             Yes, Cancel

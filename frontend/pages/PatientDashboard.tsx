@@ -32,13 +32,14 @@ const VitalsCard: React.FC<{ vital: VitalSign }> = ({ vital }) => {
         'Respiration Rate': <RespirationIcon/>,
         'SpO2': <O2Icon/>,
     }
+    const isOutOfRange = vital.thresholds && (vital.value < vital.thresholds.min || vital.value > vital.thresholds.max);
     return (
-        <div className="group bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg flex items-center transition-all duration-300 ease-in-out [transform-style:preserve-3d] hover:shadow-2xl hover:[transform:translateY(-8px)_rotateY(-15deg)_scale(1.03)] active:scale-[0.97]">
-            <div className="mr-5 transition-transform duration-300 ease-in-out group-hover:[transform:translateZ(20px)]">{icons[vital.name]}</div>
-            <div className="transition-transform duration-300 ease-in-out group-hover:[transform:translateZ(10px)]">
+        <div className={`bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-card card-hover border ${isOutOfRange ? 'border-red-200 dark:border-red-800/50' : 'border-slate-100 dark:border-slate-700/50'}`}>
+            <div className="flex items-center justify-between mb-3">
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{vital.name}</p>
-                <p className="text-3xl font-bold text-slate-800 dark:text-white">{vital.value} <span className="text-lg font-normal text-slate-600 dark:text-slate-400">{vital.unit}</span></p>
+                <div className="opacity-80">{icons[vital.name]}</div>
             </div>
+            <p className="text-3xl font-bold text-slate-800 dark:text-white">{vital.value} <span className="text-base font-normal text-slate-400 dark:text-slate-500">{vital.unit}</span></p>
         </div>
     )
 };
@@ -49,7 +50,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const dataPoint = payload[0].payload;
     
     return (
-      <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
+      <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700">
         <p className="label text-sm font-bold text-slate-800 dark:text-white mb-1">{`Time: ${dataPoint.time || label}`}</p>
         <p style={{ color: '#ef4444' }} className="text-sm font-medium">
           {`Heart Rate: ${dataPoint.heartRate?.toFixed(1) || '0.0'} BPM`}
@@ -102,23 +103,23 @@ const VitalsDisplay: React.FC<{patient: Patient}> = ({ patient }) => {
     const healthStatus = vitals.every(v => v.thresholds && v.value >= v.thresholds.min && v.value <= v.thresholds.max)
         ? "All your vitals are looking great!"
         : "Some of your vitals are outside the normal range. Your doctor has been notified.";
-    const statusColor = healthStatus.includes("great") ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400';
+    const statusColor = healthStatus.includes("great") ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50';
 
     return (
         <div className="space-y-6">
-             <div className="mb-8">
-                <h2 className="text-3xl font-bold text-slate-800 dark:text-white">{getGreeting()}, {patient.name.split(' ')[0]}!</h2>
-                <div className={`mt-2 p-3 rounded-lg flex items-center text-sm font-medium ${statusColor}`}>
+             <div className="mb-6">
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-white">{getGreeting()}, {patient.name.split(' ')[0]}!</h2>
+                <div className={`mt-3 p-4 rounded-xl flex items-center text-sm font-medium border ${statusColor}`}>
                     <CheckCircleIcon />
                     <p>{healthStatus}</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 [perspective:1000px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {vitals.map(v => <VitalsCard key={v.name} vital={v}/>)}
             </div>
-            <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-lg">
-                <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Vitals History (Last 20 Readings)</h3>
+            <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Vitals History (Last 20 Readings)</h3>
                 <ResponsiveContainer width="100%" height={350}>
                      <AreaChart data={mergedChartData} margin={isMobile ? { top: 5, right: 5, left: -25, bottom: 0 } : { top: 5, right: 20, left: -10, bottom: 5 }}>
                         <defs>
@@ -205,23 +206,23 @@ const Chatbot: React.FC = () => {
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] flex flex-col">
-            <div className="p-4 border-b dark:border-slate-700">
-                <h3 className="text-xl font-semibold text-slate-800 dark:text-white">Chat with Assistant</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] flex flex-col">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-700">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Chat with Assistant</h3>
             </div>
-            <div className="flex-1 p-6 overflow-y-auto space-y-4">
+            <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 custom-scrollbar">
                 {messages.map(msg => (
                     <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        {msg.sender === 'bot' && <div className="w-8 h-8 rounded-full bg-indigo-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">AI</div>}
-                        <div className={`max-w-lg px-4 py-3 rounded-2xl ${msg.sender === 'user' ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white rounded-bl-none'}`}>
+                        {msg.sender === 'bot' && <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-sm">AI</div>}
+                        <div className={`max-w-lg px-4 py-3 rounded-2xl ${msg.sender === 'user' ? 'bg-blue-500 text-white rounded-br-none' : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-bl-none'}`}>
                             <div dir="auto" style={{ unicodeBidi: 'plaintext', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.text}</div>
                         </div>
                     </div>
                 ))}
-                {isLoading && <div className="flex justify-start"><div className="bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white px-4 py-3 rounded-2xl rounded-bl-none"><TypingIndicator/></div></div>}
+                {isLoading && <div className="flex justify-start"><div className="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white px-4 py-3 rounded-2xl rounded-bl-none"><TypingIndicator/></div></div>}
                 <div ref={messagesEndRef} />
             </div>
-            <div className="p-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-b-2xl">
+            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30 rounded-b-2xl">
                 <div className="flex items-center gap-2">
                     <input 
                         type="text"
@@ -230,10 +231,10 @@ const Chatbot: React.FC = () => {
                         onKeyPress={e => e.key === 'Enter' && handleSend()}
                         placeholder="Type your message..."
                         dir="auto"
-                        className="w-full px-4 py-2 border dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 text-sm transition-all"
                         disabled={isLoading}
                     />
-                    <button onClick={handleSend} disabled={isLoading} className="bg-indigo-500 text-white p-3 rounded-full hover:bg-indigo-600 disabled:bg-indigo-300 transition">
+                    <button onClick={handleSend} disabled={isLoading} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-3 rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all shadow-md shadow-blue-500/20">
                         <SendIcon />
                     </button>
                 </div>
@@ -373,11 +374,11 @@ const DoctorChatModal: React.FC<{
             }
             .animate-fade-in-scale { animation: fade-in-scale 0.3s forwards cubic-bezier(0.16, 1, 0.3, 1); }
         `}</style>
-        <header className="p-4 border-b dark:border-slate-700 flex items-center justify-between flex-shrink-0">
-          <h3 className="text-xl font-semibold text-slate-800 dark:text-white">Chat with {doctor.name}</h3>
-          <button onClick={onClose} className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white text-3xl font-light">&times;</button>
+        <header className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between flex-shrink-0">
+          <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Chat with {doctor.name}</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-2xl">&times;</button>
         </header>
-        <div className="flex-1 p-6 overflow-y-auto space-y-4">
+        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 custom-scrollbar">
           {messages.map((msg, idx) => {
             const msgDate = new Date(msg.timestamp);
             const currentKey = dateKey(msgDate);
@@ -391,7 +392,7 @@ const DoctorChatModal: React.FC<{
                   </div>
                 )}
                 <div className={`flex items-end gap-2 ${msg.senderId === patient.id ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-md px-4 py-3 rounded-2xl ${msg.senderId === patient.id ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white rounded-bl-none'}`}>
+                  <div className={`max-w-md px-4 py-3 rounded-2xl ${msg.senderId === patient.id ? 'bg-blue-500 text-white rounded-br-none' : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-bl-none'}`}>
                     <div dir="auto" style={{ unicodeBidi: 'plaintext', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.text}</div>
                     <div className="flex items-center justify-end gap-1 mt-1">
                       <p className="text-xs opacity-70">{msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
@@ -408,7 +409,7 @@ const DoctorChatModal: React.FC<{
           })}
           <div ref={messagesEndRef} />
         </div>
-        <div className="p-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 rounded-b-2xl flex-shrink-0">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30 rounded-b-2xl flex-shrink-0">
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -417,10 +418,10 @@ const DoctorChatModal: React.FC<{
               onKeyPress={e => e.key === 'Enter' && handleSend()}
               placeholder="Type your message..."
               dir="auto"
-              className="w-full px-4 py-2 border dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 text-sm transition-all"
               disabled={isLoading}
             />
-            <button onClick={handleSend} disabled={isLoading} className="bg-indigo-500 text-white p-3 rounded-full hover:bg-indigo-600 disabled:bg-indigo-300 transition">
+            <button onClick={handleSend} disabled={isLoading} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-3 rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 transition-all shadow-md shadow-blue-500/20">
               <SendIcon />
             </button>
           </div>
@@ -437,19 +438,19 @@ const DoctorInfo: React.FC<{ patient: Patient; doctor: Doctor | null; isChatOpen
 
     return (
         <>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-8 space-y-6">
-                <h3 className="text-2xl font-semibold text-slate-800 dark:text-white">Your Assigned Doctor</h3>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-6 sm:p-8 space-y-6">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Your Assigned Doctor</h3>
                 <div className="flex flex-col sm:flex-row items-center gap-6">
-                    <div className="w-24 h-24 rounded-full bg-sky-100 flex items-center justify-center border-4 border-white shadow-md">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 flex items-center justify-center shadow-sm border border-sky-200/50 dark:border-sky-700/50">
                         <DoctorIcon/>
                     </div>
                     <div className="flex-1 text-center sm:text-left">
-                        <h4 className="text-3xl font-bold text-slate-900 dark:text-white">{doctor.name}</h4>
-                        <p className="text-xl text-sky-600 font-medium">{doctor.specialization}</p>
-                        <p className="text-md text-slate-500 dark:text-slate-400 mt-2">Contact: {doctor.contact}</p>
+                        <h4 className="text-2xl font-bold text-slate-900 dark:text-white">{doctor.name}</h4>
+                        <p className="text-base text-blue-600 dark:text-blue-400 font-medium">{doctor.specialization}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Contact: {doctor.contact}</p>
                     </div>
                 </div>
-                <button onClick={onOpenChat} className="w-full py-3 px-4 font-semibold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                <button onClick={onOpenChat} className="w-full py-3 px-4 font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-lg shadow-blue-500/20">
                     Contact Doctor
                 </button>
             </div>

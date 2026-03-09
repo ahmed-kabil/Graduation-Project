@@ -24,16 +24,16 @@ const VitalsCard: React.FC<{ vital: VitalSign }> = ({ vital }) => {
     const isCritical = vital.thresholds && (vital.value < vital.thresholds.min || vital.value > vital.thresholds.max);
 
     return (
-        <div className="relative group [perspective:1000px]">
+        <div className="relative group">
             {isCritical && (
-                <div className="absolute -inset-0.5 bg-red-500 rounded-xl blur opacity-75 animate-pulse"></div>
+                <div className="absolute -inset-0.5 bg-red-500 rounded-2xl blur opacity-75 animate-pulse"></div>
             )}
-            <div className={`relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 p-6 rounded-xl shadow-lg flex items-center transition-all duration-300 border-4 group-hover:shadow-2xl group-hover:[transform:translateZ(10px)_scale(1.02)] ${isCritical ? 'border-red-500' : 'border-transparent'}`}>
+            <div className={`relative bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-card border flex items-center transition-all duration-300 card-hover ${isCritical ? 'border-red-500' : 'border-slate-100 dark:border-slate-700/50'}`}>
                 <div className="mr-5">{icons[vital.name]}</div>
                 <div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{vital.name}</p>
-                    <p className={`text-4xl font-bold ${isCritical ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-white'}`}>
-                        {vital.value} <span className="text-xl font-normal text-slate-600 dark:text-slate-400">{vital.unit}</span>
+                    <p className={`text-3xl font-bold ${isCritical ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-white'}`}>
+                        {vital.value} <span className="text-lg font-normal text-slate-500 dark:text-slate-400">{vital.unit}</span>
                     </p>
                 </div>
             </div>
@@ -47,7 +47,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const dataPoint = payload[0].payload;
     
     return (
-      <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
+      <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700">
         <p className="label text-sm font-bold text-slate-800 dark:text-white mb-1">{`Time: ${dataPoint.time || label}`}</p>
         <p style={{ color: '#ef4444' }} className="text-sm font-medium">
           {`Heart Rate: ${dataPoint.heartRate?.toFixed(1) || '0.0'} BPM`}
@@ -91,12 +91,12 @@ export const PatientDetailView: React.FC<{ patient: Patient; onBack: () => void;
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Monitoring: {patient.name}</h2>
-                <button onClick={onBack} className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition w-full sm:w-auto">
+                <button onClick={onBack} className="px-4 py-2.5 bg-slate-600 text-white rounded-xl hover:bg-slate-700 transition w-full sm:w-auto">
                     &larr; Back to Patient List
                 </button>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md border-l-4 border-sky-500">
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 border-l-4 border-l-blue-500">
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Patient Information</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <div className="flex items-center gap-4">
@@ -126,8 +126,8 @@ export const PatientDetailView: React.FC<{ patient: Patient; onBack: () => void;
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {vitals.map(v => <VitalsCard key={v.name} vital={v} />)}
             </div>
-            <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-xl shadow-md">
-                <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Vitals History (Last 20 Readings)</h3>
+            <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Vitals History (Last 20 Readings)</h3>
                  <ResponsiveContainer width="100%" height={350}>
                     <AreaChart data={mergedChartData} margin={isMobile ? { top: 5, right: 5, left: -25, bottom: 0 } : { top: 5, right: 20, left: -10, bottom: 5 }}>
                         <defs>

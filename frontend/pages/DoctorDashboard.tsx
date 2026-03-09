@@ -185,22 +185,22 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
   
   // Mobile chat view uses absolute positioning for smooth slide transitions
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 10rem)', minHeight: '400px' }}>
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 10rem)', minHeight: '400px' }}>
       <div className="flex-1 flex relative overflow-hidden">
         {/* Conversation List */}
-        <div className={`absolute inset-0 sm:relative sm:inset-auto sm:w-1/3 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 flex flex-col bg-white dark:bg-slate-800 z-10 transition-transform duration-300 ease-in-out ${selectedPatient ? '-translate-x-full sm:translate-x-0' : 'translate-x-0'}`}>
-          <div className="p-4 border-b dark:border-slate-700 flex-shrink-0">
-            <h3 className="text-xl font-semibold text-slate-800 dark:text-white">Messages</h3>
+        <div className={`absolute inset-0 sm:relative sm:inset-auto sm:w-1/3 flex-shrink-0 border-r border-slate-100 dark:border-slate-700 flex flex-col bg-white dark:bg-slate-800 z-10 transition-transform duration-300 ease-in-out ${selectedPatient ? '-translate-x-full sm:translate-x-0' : 'translate-x-0'}`}>
+          <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex-shrink-0">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Messages</h3>
           </div>
-          <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="flex-1 overflow-y-auto overscroll-contain custom-scrollbar">
             {conversations.length > 0 ? conversations.map(convo => (
-              <div key={convo.patient.id} className={`flex items-center border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 ${selectedPatient?.id === convo.patient.id ? 'bg-sky-50 dark:bg-sky-900/30' : ''}`}>
+              <div key={convo.patient.id} className={`flex items-center border-b border-slate-100/80 dark:border-slate-700/80 hover:bg-slate-50 dark:hover:bg-slate-700/50 ${selectedPatient?.id === convo.patient.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
                 <button onClick={() => handleSelectConversation(convo.patient)} className="flex-1 text-left p-4 min-w-0">
                   <div className="flex justify-between items-center">
-                    <p className="font-semibold text-slate-800 dark:text-white">{convo.patient.name}</p>
-                    {convo.unreadCount > 0 && <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">{convo.unreadCount}</span>}
+                    <p className="font-semibold text-slate-800 dark:text-white text-sm">{convo.patient.name}</p>
+                    {convo.unreadCount > 0 && <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">{convo.unreadCount}</span>}
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 truncate" dir="auto">{convo.lastMessage.text}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5" dir="auto">{convo.lastMessage.text}</p>
                 </button>
               </div>
             )) : <p className="p-4 text-slate-500 dark:text-slate-400">No conversations yet.</p>}
@@ -210,13 +210,13 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
         <div className={`absolute inset-0 sm:relative sm:inset-auto sm:w-2/3 flex-shrink-0 flex flex-col bg-white dark:bg-slate-800 transition-transform duration-300 ease-in-out ${selectedPatient ? 'translate-x-0' : 'translate-x-full sm:translate-x-0'}`}>
           {selectedPatient ? (
             <>
-              <div className="p-4 border-b dark:border-slate-700 flex items-center flex-shrink-0">
-                <button onClick={() => setSelectedPatient(null)} className="sm:hidden mr-4 p-3 rounded-full text-2xl text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700">
+              <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center flex-shrink-0">
+                <button onClick={() => setSelectedPatient(null)} className="sm:hidden mr-4 p-2 rounded-xl text-xl text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                   &larr;
                 </button>
-                <h3 className="text-xl font-semibold text-slate-800 dark:text-white truncate">Chat with {selectedPatient.name}</h3>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white truncate">Chat with {selectedPatient.name}</h3>
               </div>
-              <div className="flex-1 p-4 sm:p-6 overflow-y-auto overscroll-contain space-y-4">
+              <div className="flex-1 p-4 sm:p-6 overflow-y-auto overscroll-contain space-y-4 custom-scrollbar">
                 {messages.map((msg, idx) => {
                   const msgDate = new Date(msg.timestamp);
                   const currentKey = dateKey(msgDate);
@@ -230,7 +230,7 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
                         </div>
                       )}
                       <div className={`flex items-end gap-2 ${msg.senderId === doctor.id ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] sm:max-w-lg px-4 py-3 rounded-2xl ${msg.senderId === doctor.id ? 'bg-sky-500 text-white rounded-br-none' : 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white rounded-bl-none'}`}>
+                        <div className={`max-w-[85%] sm:max-w-lg px-4 py-3 rounded-2xl ${msg.senderId === doctor.id ? 'bg-blue-500 text-white rounded-br-none' : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-bl-none'}`}>
                           <div className="break-words" dir="auto" style={{ unicodeBidi: 'plaintext', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.text}</div>
                           <div className="flex items-center justify-end gap-1 mt-1">
                             <p className="text-xs opacity-70">{msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
@@ -247,10 +247,10 @@ const MessagingView: React.FC<{ doctor: Doctor; initialPatientId?: string }> = (
                 })}
                 <div ref={messagesEndRef} />
               </div>
-              <div className="p-3 sm:p-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 flex-shrink-0">
+              <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-700/50 flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <input type="text" value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} placeholder="Type your message..." dir="auto" className="flex-1 min-w-0 px-4 py-2 border dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-sky-500" disabled={isLoading}/>
-                  <button onClick={handleSend} disabled={isLoading} className="flex-shrink-0 bg-sky-500 text-white p-3 rounded-full hover:bg-sky-600 disabled:bg-sky-300 transition"><SendIcon/></button>
+                  <input type="text" value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} placeholder="Type your message..." dir="auto" className="flex-1 min-w-0 px-4 py-3 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40" disabled={isLoading}/>
+                  <button onClick={handleSend} disabled={isLoading} className="flex-shrink-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-3 rounded-xl hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-50 transition-all"><SendIcon/></button>
                 </div>
               </div>
             </>
@@ -400,36 +400,36 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 10rem)', minHeight: '400px' }}>
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 10rem)', minHeight: '400px' }}>
       <div className="flex-1 flex relative overflow-hidden">
         {/* Conversation List */}
-        <div className={`absolute inset-0 sm:relative sm:inset-auto sm:w-1/3 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 flex flex-col bg-white dark:bg-slate-800 z-10 transition-transform duration-300 ease-in-out ${selectedNurseConvo ? '-translate-x-full sm:translate-x-0' : 'translate-x-0'}`}>
-          <div className="p-4 border-b dark:border-slate-700 flex-shrink-0">
-            <h3 className="text-xl font-semibold text-slate-800 dark:text-white">Nurse Messages</h3>
+        <div className={`absolute inset-0 sm:relative sm:inset-auto sm:w-1/3 flex-shrink-0 border-r border-slate-100 dark:border-slate-700 flex flex-col bg-white dark:bg-slate-800 z-10 transition-transform duration-300 ease-in-out ${selectedNurseConvo ? '-translate-x-full sm:translate-x-0' : 'translate-x-0'}`}>
+          <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex-shrink-0">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Nurse Messages</h3>
           </div>
-          <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="flex-1 overflow-y-auto overscroll-contain custom-scrollbar">
             {conversations.length > 0 ? conversations.map(item => (
-              <div key={item.conversation.conversation_id} className={`flex items-center border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 ${selectedNurseConvo?.conversation_id === item.conversation.conversation_id ? 'bg-sky-50 dark:bg-sky-900/30' : ''}`}>
+              <div key={item.conversation.conversation_id} className={`flex items-center border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${selectedNurseConvo?.conversation_id === item.conversation.conversation_id ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}>
                 <button onClick={() => setSelectedNurseConvo(item.conversation)} className="flex-1 text-left p-4 min-w-0">
                   <div className="flex justify-between items-center">
-                    <p className="font-semibold text-slate-800 dark:text-white">{item.conversation.nurse_name}</p>
-                    {item.unreadCount > 0 && <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">{item.unreadCount}</span>}
+                    <p className="font-medium text-sm text-slate-800 dark:text-white">{item.conversation.nurse_name}</p>
+                    {item.unreadCount > 0 && <span className="bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">{item.unreadCount}</span>}
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 truncate" dir="auto">{item.conversation.last_message || 'No messages yet'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate" dir="auto">{item.conversation.last_message || 'No messages yet'}</p>
                 </button>
               </div>
-            )) : <p className="p-4 text-slate-500 dark:text-slate-400">No nurse conversations yet.</p>}
+            )) : <p className="p-4 text-sm text-slate-500 dark:text-slate-400">No nurse conversations yet.</p>}
           </div>
         </div>
         {/* Chat View */}
         <div className={`absolute inset-0 sm:relative sm:inset-auto sm:w-2/3 flex-shrink-0 flex flex-col bg-white dark:bg-slate-800 transition-transform duration-300 ease-in-out ${selectedNurseConvo ? 'translate-x-0' : 'translate-x-full sm:translate-x-0'}`}>
           {selectedNurseConvo ? (
             <>
-              <div className="p-4 border-b dark:border-slate-700 flex items-center flex-shrink-0">
-                <button onClick={() => setSelectedNurseConvo(null)} className="sm:hidden mr-4 p-3 rounded-full text-2xl text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700">&larr;</button>
-                <h3 className="text-xl font-semibold text-slate-800 dark:text-white truncate">Chat with Nurse {selectedNurseConvo.nurse_name}</h3>
+              <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center flex-shrink-0">
+                <button onClick={() => setSelectedNurseConvo(null)} className="sm:hidden mr-4 p-2 rounded-xl text-xl text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">&larr;</button>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white truncate">Chat with Nurse {selectedNurseConvo.nurse_name}</h3>
               </div>
-              <div className="flex-1 p-4 sm:p-6 overflow-y-auto overscroll-contain space-y-4">
+              <div className="flex-1 p-4 sm:p-6 overflow-y-auto overscroll-contain space-y-4 custom-scrollbar">
                 {messages.map((msg, idx) => {
                   const msgDate = new Date(msg.timestamp);
                   const currentKey = dateKey(msgDate);
@@ -443,7 +443,7 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
                         </div>
                       )}
                       <div className={`flex items-end gap-2 ${msg.senderId === doctor.id ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] sm:max-w-lg px-4 py-3 rounded-2xl ${msg.senderId === doctor.id ? 'bg-sky-500 text-white rounded-br-none' : 'bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white rounded-bl-none'}`}>
+                        <div className={`max-w-[85%] sm:max-w-lg px-4 py-3 rounded-2xl ${msg.senderId === doctor.id ? 'bg-blue-500 text-white rounded-br-none' : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-bl-none'}`}>
                           <div className="break-words" dir="auto" style={{ unicodeBidi: 'plaintext', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.text}</div>
                           <div className="flex items-center justify-end gap-1 mt-1">
                             <p className="text-xs opacity-70">{msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
@@ -460,10 +460,10 @@ const NurseMessagingView: React.FC<{ doctor: Doctor }> = ({ doctor }) => {
                 })}
                 <div ref={messagesEndRef} />
               </div>
-              <div className="p-3 sm:p-4 border-t dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 flex-shrink-0">
+              <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-700/50 flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <input type="text" value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} placeholder="Type your message..." dir="auto" className="flex-1 min-w-0 px-4 py-2 border dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-sky-500" disabled={isLoading} />
-                  <button onClick={handleSend} disabled={isLoading} className="flex-shrink-0 bg-sky-500 text-white p-3 rounded-full hover:bg-sky-600 disabled:bg-sky-300 transition"><SendIcon /></button>
+                  <input type="text" value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} placeholder="Type your message..." dir="auto" className="flex-1 min-w-0 px-4 py-3 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40" disabled={isLoading} />
+                  <button onClick={handleSend} disabled={isLoading} className="flex-shrink-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-3 rounded-xl hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-50 transition-all"><SendIcon /></button>
                 </div>
               </div>
             </>
@@ -628,16 +628,16 @@ export const DoctorDashboard: React.FC = () => {
     ];
 
     const renderPatientList = () => (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Assigned Patients</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-6">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Assigned Patients</h3>
             <div className="space-y-3">
                 {patients.map(p => (
-                    <button key={p.id} onClick={() => setSelectedPatient(p)} className="w-full text-left p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 hover:bg-sky-100 dark:hover:bg-sky-900/30 border border-slate-200 dark:border-slate-700 hover:border-sky-300 transition-transform duration-150 active:scale-[0.98] flex justify-between items-center">
+                    <button key={p.id} onClick={() => setSelectedPatient(p)} className="w-full text-left p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-slate-200/80 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-700/50 transition-all duration-200 flex justify-between items-center">
                         <div>
                             <p className="font-semibold text-slate-800 dark:text-white">{p.name}, {p.age}</p>
                             <p className="text-sm text-slate-500 dark:text-slate-400">{p.gender}</p>
                         </div>
-                        <span className="text-sm font-medium text-sky-600">View Details &rarr;</span>
+                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">View Details &rarr;</span>
                     </button>
                 ))}
             </div>
@@ -654,7 +654,7 @@ export const DoctorDashboard: React.FC = () => {
     };
 
     const renderAlerts = () => (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-6">
             <style>{`
                 @keyframes alert-fade-out {
                     from { opacity: 1; transform: translateX(0); }
@@ -662,18 +662,18 @@ export const DoctorDashboard: React.FC = () => {
                 }
                 .alert-dismissing { animation: alert-fade-out 280ms ease-in forwards; pointer-events: none; }
             `}</style>
-            <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Critical Alerts ({doctorAlerts.length})</h3>
-            <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto">
-                {doctorAlerts.length === 0 ? <p className="text-slate-500 dark:text-slate-400">No active alerts for your patients.</p> :
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Critical Alerts ({doctorAlerts.length})</h3>
+            <div className="space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto custom-scrollbar">
+                {doctorAlerts.length === 0 ? <p className="text-slate-500 dark:text-slate-400 text-sm">No active alerts for your patients.</p> :
                  doctorAlerts.map(a => (
-                    <div key={a.id} className={`p-4 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 flex items-start justify-between transition-all ${dismissingAlertIds.has(a.id) ? 'alert-dismissing' : ''}`}>
+                    <div key={a.id} className={`p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200/80 dark:border-red-800/60 flex items-start justify-between transition-all ${dismissingAlertIds.has(a.id) ? 'alert-dismissing' : ''}`}>
                         <div>
-                            <p className="font-bold text-red-700 dark:text-red-400">{a.message}</p>
-                            <p className="text-sm text-red-600 dark:text-red-400">Patient: {a.patientName} | Value: {a.value}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{a.timestamp.toLocaleString()}</p>
+                            <p className="font-semibold text-red-700 dark:text-red-400 text-sm">{a.message}</p>
+                            <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5">Patient: {a.patientName} | Value: {a.value}</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{a.timestamp.toLocaleString()}</p>
                         </div>
-                        <button onClick={(e) => { e.stopPropagation(); handleDismissAlert(a.id); }} className="ml-3 flex-shrink-0 p-1 rounded-full text-red-400 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 transition" aria-label="Dismiss alert">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        <button onClick={(e) => { e.stopPropagation(); handleDismissAlert(a.id); }} className="ml-3 flex-shrink-0 p-1.5 rounded-lg text-red-400 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 transition" aria-label="Dismiss alert">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
                 ))}

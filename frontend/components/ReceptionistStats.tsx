@@ -72,7 +72,7 @@ const DoctorIcon = () => (
 const PieTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
+            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700">
                 <p className="text-sm font-bold" style={{ color: payload[0].payload.fill }}>
                     {payload[0].name}
                 </p>
@@ -92,7 +92,7 @@ const PieTooltip = ({ active, payload }: any) => {
 const BarTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-3 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700">
+            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700">
                 <p className="text-sm font-bold text-slate-800 dark:text-white">{label}</p>
                 <p className="text-sm text-indigo-600 font-medium">
                     Patients: {payload[0].value}
@@ -186,7 +186,7 @@ export const ReceptionistStats: React.FC = () => {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
                 {/* Total Patients Card */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-blue-500">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-4 sm:p-6 border-l-4 border-l-blue-500">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Total Patients</p>
@@ -199,7 +199,7 @@ export const ReceptionistStats: React.FC = () => {
                 </div>
 
                 {/* Male Patients Card */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-sky-500">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-4 sm:p-6 border-l-4 border-l-sky-500">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Male Patients</p>
@@ -215,7 +215,7 @@ export const ReceptionistStats: React.FC = () => {
                 </div>
 
                 {/* Female Patients Card */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 sm:p-6 border-l-4 border-pink-500">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-4 sm:p-6 border-l-4 border-l-pink-500">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Female Patients</p>
@@ -234,7 +234,7 @@ export const ReceptionistStats: React.FC = () => {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Gender Distribution Pie Chart */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 sm:p-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-4 sm:p-6">
                     <h3 className="text-base sm:text-lg font-semibold text-slate-800 dark:text-white mb-3 sm:mb-4">Gender Distribution</h3>
                     {totalPatients === 0 ? (
                         <div className="flex items-center justify-center h-48 sm:h-64 text-slate-400 text-sm">No patient data available</div>
@@ -273,7 +273,7 @@ export const ReceptionistStats: React.FC = () => {
                 </div>
 
                 {/* Top Doctors Bar Chart */}
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 sm:p-6">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-4 sm:p-6">
                     <div className="flex items-center gap-2 mb-3 sm:mb-4">
                         <div className="text-indigo-600"><DoctorIcon /></div>
                         <h3 className="text-base sm:text-lg font-semibold text-slate-800 dark:text-white">Top Doctors by Patient Count</h3>
