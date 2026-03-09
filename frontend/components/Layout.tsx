@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useState, useId } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Role } from '../types';
 
@@ -8,13 +8,17 @@ interface LayoutProps {
   activeItem: string;
 }
 
-const LogoIcon = ({ size = 32 }: { size?: number }) => (
+const LogoIcon = ({ size = 32 }: { size?: number }) => {
+    const uid = useId();
+    const gradId = `heartGrad${uid}`;
+    return (
     <svg width={size} height={size} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M40 70 C40 70 8 48 8 28 C8 16 17 8 28 8 C33.5 8 38 10.5 40 14 C42 10.5 46.5 8 52 8 C63 8 72 16 72 28 C72 48 40 70 40 70Z" fill="url(#sidebarHeartGrad)" />
+        <path d="M40 70 C40 70 8 48 8 28 C8 16 17 8 28 8 C33.5 8 38 10.5 40 14 C42 10.5 46.5 8 52 8 C63 8 72 16 72 28 C72 48 40 70 40 70Z" fill={`url(#${gradId})`} />
         <polyline points="12,40 26,40 30,40 34,32 38,50 42,28 46,46 50,36 54,40 68,40" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-        <defs><linearGradient id="sidebarHeartGrad" x1="8" y1="8" x2="72" y2="70" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#0ea5e9"/><stop offset="50%" stopColor="#0d9488"/><stop offset="100%" stopColor="#0ea5e9"/></linearGradient></defs>
+        <defs><linearGradient id={gradId} x1="8" y1="8" x2="72" y2="70" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#0ea5e9"/><stop offset="50%" stopColor="#0d9488"/><stop offset="100%" stopColor="#0ea5e9"/></linearGradient></defs>
     </svg>
-);
+    );
+};
 const LogoutIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
 );
