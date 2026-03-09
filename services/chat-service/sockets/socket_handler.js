@@ -32,9 +32,7 @@ module.exports = (io) => {
           return socket.emit("errorMessage", { error: "Invalid message data" });
         }
 
-        // Emit first for lower latency, then persist
-        io.to(data.conversation_id).emit("receiveDocPatMessage", data);
-
+        // Save first so we get the DB-generated _id and timestamp
         const savedMsg = await Message.create(data);
 
         const patientId = data.patient_id || data.conversation_id.replace("conv_", "");
@@ -54,6 +52,10 @@ module.exports = (io) => {
           },
           { upsert: true, new: true }
         );
+
+        // Emit to room with DB-generated _id and timestamp
+        const emitData = { ...data, _id: savedMsg._id.toString(), timestamp: savedMsg.timestamp };
+        io.to(data.conversation_id).emit("receiveDocPatMessage", emitData);
       } catch (err) {
         console.error("❌ Error in sendDocPatMessage:", err);
         socket.emit("errorMessage", { error: "Message could not be sent" });
@@ -74,9 +76,7 @@ module.exports = (io) => {
           return socket.emit("errorMessage", { error: "Invalid message data" });
         }
 
-        // Emit first for lower latency, then persist
-        io.to(data.conversation_id).emit("receiveDocNurMessage", data);
-
+        // Save first so we get the DB-generated _id and timestamp
         const savedMsg = await Message.create(data);
 
         await DocNurConversation.findOneAndUpdate(
@@ -86,6 +86,10 @@ module.exports = (io) => {
           },
           { new: true }
         );
+
+        // Emit to room with DB-generated _id and timestamp
+        const emitData = { ...data, _id: savedMsg._id.toString(), timestamp: savedMsg.timestamp };
+        io.to(data.conversation_id).emit("receiveDocNurMessage", emitData);
       } catch (err) {
         console.error("❌ Error in sendDocNurMessage:", err);
         socket.emit("errorMessage", { error: "Message could not be sent" });
@@ -96,6 +100,28 @@ module.exports = (io) => {
     socket.on("newAppointment", (data) => {
       console.log("📅 New appointment notification:", data);
       io.to(data.conversation_id).emit("newAppointment", data);
+    });
+
+    /**
+     * Real-time read receipts
+     * When a user marks messages as read, broadcast to the conversation
+     * so the sender's UI can update ✓ → ✓✓ instantly.
+     */
+    socket.on("messagesRead", async (data) => {
+      // data = { conversation_id, reader_id }
+      if (data && data.conversation_id && data.reader_id) {
+        try {
+          const Message = require("../models/messages-model");
+          await Message.updateMany(
+            { conversation_id: data.conversation_id, receiver_id: data.reader_id, read: false },
+            { read: true }
+          );
+        } catch (err) {
+          console.error("❌ Error updating read status in DB:", err);
+        }
+        // Broadcast to all participants in the conversation room
+        io.to(data.conversation_id).emit("messagesRead", data);
+      }
     });
 
     // Handle disconnect

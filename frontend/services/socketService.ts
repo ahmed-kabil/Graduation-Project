@@ -42,6 +42,8 @@ class SocketService {
   private messagesReadHandlers: ((data: MessagesReadData) => void)[] = [];
   private errorHandlers: ((error: SocketErrorMessage) => void)[] = [];
   private connectListeners: (() => void)[] = [];
+  private joinedRooms: Set<string> = new Set();
+  private onlineUserId: string | null = null;
 
   /**
    * Initialize socket connection
@@ -69,8 +71,23 @@ class SocketService {
 
     this.socket.on('connect', () => {
       console.log('Socket connected:', this.socket?.id);
-      // Execute any pending connect listeners
-      this.connectListeners.forEach(listener => listener());
+
+      // Re-establish online status
+      if (this.onlineUserId && this.socket?.connected) {
+        this.socket.emit('online', this.onlineUserId);
+      }
+
+      // Re-join all previously joined rooms (critical for reconnection)
+      this.joinedRooms.forEach(room => {
+        if (this.socket?.connected) {
+          this.socket.emit('joinConversation', room);
+        }
+      });
+
+      // Execute any pending connect listeners then clear them
+      const pending = [...this.connectListeners];
+      this.connectListeners = [];
+      pending.forEach(listener => listener());
     });
 
     this.socket.on('disconnect', () => {
@@ -110,6 +127,8 @@ class SocketService {
       this.messagesReadHandlers = [];
       this.errorHandlers = [];
       this.connectListeners = [];
+      this.joinedRooms.clear();
+      this.onlineUserId = null;
     }
   }
 
@@ -128,6 +147,7 @@ class SocketService {
    * Emit "online" event to mark user as online
    */
   goOnline(userId: string): void {
+    this.onlineUserId = userId;
     this.whenConnected(() => {
       if (this.socket?.connected) {
         this.socket.emit('online', userId);
@@ -140,6 +160,7 @@ class SocketService {
    * Join a conversation room
    */
   joinConversation(conversationId: string): void {
+    this.joinedRooms.add(conversationId);
     this.whenConnected(() => {
       if (this.socket?.connected) {
         this.socket.emit('joinConversation', conversationId);
