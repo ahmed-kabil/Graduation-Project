@@ -492,8 +492,14 @@ export const DoctorDashboard: React.FC = () => {
     const notifiedMessagesRef = useRef<Set<string>>(new Set());
     const notifiedNurseMessagesRef = useRef<Set<string>>(new Set());
     const [dismissingAlertIds, setDismissingAlertIds] = useState<Set<string>>(new Set());
+    const activeTabRef = useRef(activeTab);
     
     const doctor = user as Doctor;
+
+    // Keep ref in sync with state so the socket handler always reads the latest tab
+    useEffect(() => {
+        activeTabRef.current = activeTab;
+    }, [activeTab]);
     
     // Filter alerts to only show alerts for patients assigned to this doctor.
     // Uses the live `patients` state (fetched via getDoctorPatients) for up-to-date filtering,
@@ -503,6 +509,8 @@ export const DoctorDashboard: React.FC = () => {
     const doctorUnreadCount = doctorAlerts.filter(a => !isAlertRead(a.id)).length;
 
     // Real-time appointment notifications using Socket.io
+    // Uses a ref for activeTab so the listener is registered only once (on mount)
+    // and never torn down / re-created when tabs change.
     useEffect(() => {
         // Connect to socket
         socketService.connect();
@@ -514,8 +522,11 @@ export const DoctorDashboard: React.FC = () => {
         const handleNewAppointment = (data: any) => {
             console.log('📅 New appointment notification received:', data);
             
-            // Only increment if not on Appointments tab
-            if (activeTab !== 'Appointments') {
+            // Always increment the counter — it will be visible when the user is
+            // NOT on the Appointments tab, and the badge is already hidden while
+            // they ARE on it (the count is reset on click).  Reading from the ref
+            // avoids stale-closure issues that caused the old desync bug.
+            if (activeTabRef.current !== 'Appointments') {
                 setNewAppointmentCount(prev => prev + 1);
                 addToast(
                     `New appointment request${data.patient_id ? ` (${data.date} at ${data.time})` : ''}!`,
@@ -531,11 +542,12 @@ export const DoctorDashboard: React.FC = () => {
         
         socketService.on('newAppointment', handleNewAppointment);
         
-        // Cleanup
+        // Cleanup only on unmount
         return () => {
             socketService.off('newAppointment', handleNewAppointment);
         };
-    }, [activeTab, addToast, doctor.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [doctor.id]);
 
     useEffect(() => {
         api.getDoctorPatients(doctor.id).then(fetchedPatients => {

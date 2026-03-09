@@ -2,9 +2,11 @@
 import React, { useState, FormEvent } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-const RedCrescentIcon = () => (
-    <svg xmlns="http://www.w.w3.org/2000/svg" className="h-10 w-10 mx-auto text-red-600" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+const HeartPulseIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" opacity="0.15"/>
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+        <polyline points="3.5 12 8.5 12 10 10 12 14 14 10 15.5 12 20.5 12"/>
     </svg>
 );
 
@@ -102,8 +104,8 @@ export const LoginPage: React.FC = () => {
             {/* Login card with transparency */}
             <div className="relative z-10 w-full max-w-md p-8 space-y-6 bg-white/80 dark:bg-slate-800/85 backdrop-blur-md rounded-xl shadow-2xl border border-white/40 dark:border-slate-700/50">
                 <div className="text-center mb-6">
-                    <RedCrescentIcon />
-                    <h2 className="text-3xl font-bold text-slate-800 dark:text-white mt-4">Al Zohor Hospital Portal</h2>
+                    <HeartPulseIcon />
+                    <h2 className="text-3xl font-bold text-slate-800 dark:text-white mt-4">NABD Medical Portal</h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Sign in to access your dashboard</p>
                 </div>
                 <form onSubmit={handleLogin} noValidate className="space-y-4">

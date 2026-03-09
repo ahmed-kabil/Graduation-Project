@@ -1,6 +1,6 @@
-# Al Zohor Hospital - Mobile App (Android APK)
+# NABD Hospital - Mobile App (Android APK)
 
-This guide explains how to build and run the Al Zohor Hospital app as an Android APK using **Capacitor**.
+This guide explains how to build and run the NABD Hospital app as an Android APK using **Capacitor**.
 
 ---
 
@@ -149,7 +149,7 @@ Configure in `capacitor.config.ts` under `plugins.SplashScreen`.
 ### App Name
 Edit `frontend/android/app/src/main/res/values/strings.xml`:
 ```xml
-<string name="app_name">Al Zohor Hospital</string>
+<string name="app_name">NABD Hospital</string>
 ```
 
 ---
@@ -182,8 +182,8 @@ For the production APK:
 
 1. Update `.env.mobile` with your production backend URL:
    ```env
-   VITE_BACKEND_URL=https://alzohor-hospital.nabawi.me
-   VITE_SOCKET_URL=https://alzohor-hospital.nabawi.me
+   VITE_BACKEND_URL=https://nabd-hospital.nabawi.me
+   VITE_SOCKET_URL=https://nabd-hospital.nabawi.me
    ```
 
 2. Update `capacitor.config.ts`:

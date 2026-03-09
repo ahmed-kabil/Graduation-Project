@@ -8,7 +8,7 @@
     </base-config>
     <!-- For production, restrict to your domain only:
     <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">alzohor-hospital.nabawi.me</domain>
+        <domain includeSubdomains="true">nabd-hospital.nabawi.me</domain>
     </domain-config>
     -->
 </network-security-config>
