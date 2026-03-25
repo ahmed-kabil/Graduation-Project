@@ -6,7 +6,10 @@ const Patients = require("../models/patients-model");
  */
 const getAllReadings = async (req, res) => {
   try {
-    const readings = await Readings.find();
+    const readings = await Readings.find()
+      .sort({ timestamp: -1 })
+      .limit(20);
+      
     res.json({ status: "success", data: { readings: readings } });
   } catch (err) {
     res.status(400).json({ status: "error", message: err.message });
