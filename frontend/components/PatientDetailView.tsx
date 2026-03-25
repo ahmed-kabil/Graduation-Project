@@ -25,7 +25,7 @@ const VitalsCard: React.FC<{ vital: VitalSign }> = ({ vital }) => {
     const isOutOfRange = vital.thresholds && (vital.value < vital.thresholds.min || vital.value > vital.thresholds.max);
 
     return (
-        <div className={`bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-card card-hover border ${isOutOfRange ? 'border-red-200 dark:border-red-800/50' : 'border-slate-100 dark:border-slate-700/50'}`}>
+        <div className={`bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-card card-hover border ${isOutOfRange ? 'border border-red-600 shadow-[0_0_10px_rgba(239,68,68,0.9)] bg-red-200 dark:bg-red-900/40 animate-pulse' : 'border-slate-100 dark:border-slate-700/50'}`}>
             <div className="flex items-center justify-between mb-3">
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{vital.name}</p>
                 <div className="opacity-80">{icons[vital.name]}</div>
