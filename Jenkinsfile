@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USERNAME = 'monabawi'
+        DOCKER_HUB_USERNAME = 'ebrahimmohammed'
         IMAGE_TAG = 'latest'
 
         AUTH_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-auth-service"
