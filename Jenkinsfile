@@ -6,6 +6,7 @@ pipeline {
         IMAGE_TAG = 'latest'
 
         AUTH_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-auth-service"
+        CORE_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-core-service"
     }
 
     stages {
@@ -30,7 +31,10 @@ pipeline {
             }
         }
 
-        stage('Build Auth Service Image') {
+        // =========================
+        // Build Stage
+        // =========================
+        stage('Build Auth Image') {
             steps {
                 sh '''
                     docker build -t $AUTH_IMAGE:$IMAGE_TAG ./services/auth-service
@@ -38,10 +42,29 @@ pipeline {
             }
         }
 
-        stage('Push Image') {
+        stage('Build Core Image') {
+            steps {
+                sh '''
+                    docker build -t $CORE_IMAGE:$IMAGE_TAG ./services/core-service
+                '''
+            }
+        }
+
+        // =========================
+        // Push Stage
+        // =========================
+        stage('Push Auth Image') {
             steps {
                 sh '''
                     docker push $AUTH_IMAGE:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Push Core Image') {
+            steps {
+                sh '''
+                    docker push $CORE_IMAGE:$IMAGE_TAG
                 '''
             }
         }
@@ -50,6 +73,12 @@ pipeline {
     post {
         always {
             sh 'docker logout || true'
+        }
+        success {
+            echo '✅ Auth & Core images built and pushed successfully!'
+        }
+        failure {
+            echo '❌ Pipeline failed. Check logs.'
         }
     }
 }
