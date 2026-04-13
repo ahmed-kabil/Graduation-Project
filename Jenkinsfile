@@ -11,7 +11,6 @@ pipeline {
         CHAT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-chat-service"
         BOT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-medical-chatbot"
         FRONT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-frontend"
-        GATEWAY_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-gateway"
     }
 
     stages {
@@ -128,21 +127,6 @@ pipeline {
                 sh 'docker push $FRONT_IMAGE:$IMAGE_TAG'
             }
         }
-
-        // =========================
-        // NGINX GATEWAY
-        // =========================
-        stage('Build Gateway') {
-            steps {
-                sh 'docker build -t $GATEWAY_IMAGE:$IMAGE_TAG ./nginx'
-            }
-        }
-
-        stage('Push Gateway') {
-            steps {
-                sh 'docker push $GATEWAY_IMAGE:$IMAGE_TAG'
-            }
-        }
     }
 
     post {
@@ -150,10 +134,10 @@ pipeline {
             sh 'docker logout || true'
         }
         success {
-            echo '✅ All images built and pushed successfully!'
+            echo '✅ Services built and pushed successfully (Gateway Skipped)!'
         }
         failure {
-            echo '❌ Pipeline failed. Check logs.'
+            echo '❌ Pipeline failed at one of the microservices. Check logs.'
         }
     }
 }
