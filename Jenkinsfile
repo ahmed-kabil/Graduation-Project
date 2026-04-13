@@ -7,6 +7,11 @@ pipeline {
 
         AUTH_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-auth-service"
         CORE_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-core-service"
+        IOT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-iot-service"
+        CHAT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-chat-service"
+        BOT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-medical-chatbot"
+        FRONT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-frontend"
+        GATEWAY_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-gateway"
     }
 
     stages {
@@ -32,40 +37,110 @@ pipeline {
         }
 
         // =========================
-        // Build Stage
+        // AUTH SERVICE
         // =========================
-        stage('Build Auth Image') {
+        stage('Build Auth Service') {
             steps {
-                sh '''
-                    docker build -t $AUTH_IMAGE:$IMAGE_TAG ./services/auth-service
-                '''
+                sh 'docker build -t $AUTH_IMAGE:$IMAGE_TAG ./services/auth-service'
             }
         }
 
-        stage('Build Core Image') {
+        stage('Push Auth Service') {
             steps {
-                sh '''
-                    docker build -t $CORE_IMAGE:$IMAGE_TAG ./services/core-service
-                '''
+                sh 'docker push $AUTH_IMAGE:$IMAGE_TAG'
             }
         }
 
         // =========================
-        // Push Stage
+        // CORE SERVICE
         // =========================
-        stage('Push Auth Image') {
+        stage('Build Core Service') {
+            steps {
+                sh 'docker build -t $CORE_IMAGE:$IMAGE_TAG ./services/core-service'
+            }
+        }
+
+        stage('Push Core Service') {
+            steps {
+                sh 'docker push $CORE_IMAGE:$IMAGE_TAG'
+            }
+        }
+
+        // =========================
+        // IOT SERVICE
+        // =========================
+        stage('Build IoT Service') {
+            steps {
+                sh 'docker build -t $IOT_IMAGE:$IMAGE_TAG ./services/iot-service'
+            }
+        }
+
+        stage('Push IoT Service') {
+            steps {
+                sh 'docker push $IOT_IMAGE:$IMAGE_TAG'
+            }
+        }
+
+        // =========================
+        // CHAT SERVICE
+        // =========================
+        stage('Build Chat Service') {
+            steps {
+                sh 'docker build -t $CHAT_IMAGE:$IMAGE_TAG ./services/chat-service'
+            }
+        }
+
+        stage('Push Chat Service') {
+            steps {
+                sh 'docker push $CHAT_IMAGE:$IMAGE_TAG'
+            }
+        }
+
+        // =========================
+        // MEDICAL CHATBOT
+        // =========================
+        stage('Build Medical ChatBot') {
+            steps {
+                sh 'docker build -t $BOT_IMAGE:$IMAGE_TAG ./Medical-ChatBot-main'
+            }
+        }
+
+        stage('Push Medical ChatBot') {
+            steps {
+                sh 'docker push $BOT_IMAGE:$IMAGE_TAG'
+            }
+        }
+
+        // =========================
+        // FRONTEND
+        // =========================
+        stage('Build Frontend') {
             steps {
                 sh '''
-                    docker push $AUTH_IMAGE:$IMAGE_TAG
+                docker build -t $FRONT_IMAGE:$IMAGE_TAG \
+                -f ./frontend/Dockerfile.microservices ./frontend
                 '''
             }
         }
 
-        stage('Push Core Image') {
+        stage('Push Frontend') {
             steps {
-                sh '''
-                    docker push $CORE_IMAGE:$IMAGE_TAG
-                '''
+                sh 'docker push $FRONT_IMAGE:$IMAGE_TAG'
+            }
+        }
+
+        // =========================
+        // NGINX GATEWAY
+        // =========================
+        stage('Build Gateway') {
+            steps {
+                sh 'docker build -t $GATEWAY_IMAGE:$IMAGE_TAG ./nginx'
+            }
+        }
+
+        stage('Push Gateway') {
+            steps {
+                sh 'docker push $GATEWAY_IMAGE:$IMAGE_TAG'
             }
         }
     }
@@ -75,7 +150,7 @@ pipeline {
             sh 'docker logout || true'
         }
         success {
-            echo '✅ Auth & Core images built and pushed successfully!'
+            echo '✅ All images built and pushed successfully!'
         }
         failure {
             echo '❌ Pipeline failed. Check logs.'
