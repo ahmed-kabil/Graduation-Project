@@ -11,10 +11,10 @@ pipeline {
         CHAT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-chat-service"
         BOT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-medical-chatbot"
         FRONT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-frontend"
+        GATEWAY_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-gateway"
     }
 
     stages {
-
         stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/Ibrahim131313/Graduation-Project.git'
@@ -28,103 +28,57 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    '''
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
                 }
             }
         }
 
-        // =========================
-        // AUTH SERVICE
-        // =========================
-        stage('Build Auth Service') {
+        stage('Build & Push Auth Service') {
             steps {
                 sh 'docker build -t $AUTH_IMAGE:$IMAGE_TAG ./services/auth-service'
-            }
-        }
-
-        stage('Push Auth Service') {
-            steps {
                 sh 'docker push $AUTH_IMAGE:$IMAGE_TAG'
             }
         }
 
-        // =========================
-        // CORE SERVICE
-        // =========================
-        stage('Build Core Service') {
+        stage('Build & Push Core Service') {
             steps {
                 sh 'docker build -t $CORE_IMAGE:$IMAGE_TAG ./services/core-service'
-            }
-        }
-
-        stage('Push Core Service') {
-            steps {
                 sh 'docker push $CORE_IMAGE:$IMAGE_TAG'
             }
         }
 
-        // =========================
-        // IOT SERVICE
-        // =========================
-        stage('Build IoT Service') {
+        stage('Build & Push IoT Service') {
             steps {
                 sh 'docker build -t $IOT_IMAGE:$IMAGE_TAG ./services/iot-service'
-            }
-        }
-
-        stage('Push IoT Service') {
-            steps {
                 sh 'docker push $IOT_IMAGE:$IMAGE_TAG'
             }
         }
 
-        // =========================
-        // CHAT SERVICE
-        // =========================
-        stage('Build Chat Service') {
+        stage('Build & Push Chat Service') {
             steps {
                 sh 'docker build -t $CHAT_IMAGE:$IMAGE_TAG ./services/chat-service'
-            }
-        }
-
-        stage('Push Chat Service') {
-            steps {
                 sh 'docker push $CHAT_IMAGE:$IMAGE_TAG'
             }
         }
 
-        // =========================
-        // MEDICAL CHATBOT
-        // =========================
-        stage('Build Medical ChatBot') {
+        stage('Build & Push Medical ChatBot') {
             steps {
                 sh 'docker build -t $BOT_IMAGE:$IMAGE_TAG ./Medical-ChatBot-main'
-            }
-        }
-
-        stage('Push Medical ChatBot') {
-            steps {
                 sh 'docker push $BOT_IMAGE:$IMAGE_TAG'
             }
         }
 
-        // =========================
-        // FRONTEND
-        // =========================
-        stage('Build Frontend') {
+        stage('Build & Push Frontend') {
             steps {
-                sh '''
-                docker build -t $FRONT_IMAGE:$IMAGE_TAG \
-                -f ./frontend/Dockerfile.microservices ./frontend
-                '''
+                sh 'docker build -t $FRONT_IMAGE:$IMAGE_TAG -f ./frontend/Dockerfile.microservices ./frontend'
+                sh 'docker push $FRONT_IMAGE:$IMAGE_TAG'
             }
         }
 
-        stage('Push Frontend') {
+        stage('Build & Push Gateway') {
             steps {
-                sh 'docker push $FRONT_IMAGE:$IMAGE_TAG'
+                sh 'docker build -t $GATEWAY_IMAGE:$IMAGE_TAG ./nginx'
+                sh 'docker push $GATEWAY_IMAGE:$IMAGE_TAG'
             }
         }
     }
@@ -134,10 +88,10 @@ pipeline {
             sh 'docker logout || true'
         }
         success {
-            echo '✅ Services built and pushed successfully (Gateway Skipped)!'
+            echo '✅ All images built and pushed successfully!'
         }
         failure {
-            echo '❌ Pipeline failed at one of the microservices. Check logs.'
+            echo '❌ Pipeline failed. Check logs.'
         }
     }
-}
+} // نهاية الـ Pipeline
