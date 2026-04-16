@@ -2,16 +2,21 @@ pipeline {
     agent any
 
     environment {
+        // بيانات Docker Hub
         DOCKER_HUB_USERNAME = 'ebrahimmohammed'
         IMAGE_TAG = 'latest'
 
-        AUTH_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-auth-service"
-        CORE_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-core-service"
-        IOT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-iot-service"
-        CHAT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-chat-service"
-        BOT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-medical-chatbot"
-        FRONT_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-frontend"
+        // أسماء الصور (Images) - موحدة مع ملف الـ Compose
+        AUTH_IMAGE    = "${DOCKER_HUB_USERNAME}/hospital-auth-service"
+        CORE_IMAGE    = "${DOCKER_HUB_USERNAME}/hospital-core-service"
+        IOT_IMAGE     = "${DOCKER_HUB_USERNAME}/hospital-iot-service"
+        CHAT_IMAGE    = "${DOCKER_HUB_USERNAME}/hospital-chat-service"
+        BOT_IMAGE     = "${DOCKER_HUB_USERNAME}/hospital-medical-chatbot"
+        FRONT_IMAGE   = "${DOCKER_HUB_USERNAME}/hospital-frontend"
         GATEWAY_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-gateway"
+
+        // تعريف الـ Credentials IDs اللي إنت مخزنها في Jenkins
+        DOCKER_CREDS_ID = 'dockerhub-creds'
     }
 
     stages {
@@ -23,62 +28,61 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
+                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
                 }
             }
         }
 
-        stage('Build & Push Auth Service') {
+        // --- مرحلة بناء الصور ورفعها (نفس اللي عملتها قبل كدة) ---
+        stage('Build & Push Services') {
             steps {
-                sh 'docker build -t $AUTH_IMAGE:$IMAGE_TAG ./services/auth-service'
-                sh 'docker push $AUTH_IMAGE:$IMAGE_TAG'
+                script {
+                    sh 'docker build -t $AUTH_IMAGE:$IMAGE_TAG ./services/auth-service'
+                    sh 'docker push $AUTH_IMAGE:$IMAGE_TAG'
+                    
+                    sh 'docker build -t $CORE_IMAGE:$IMAGE_TAG ./services/core-service'
+                    sh 'docker push $CORE_IMAGE:$IMAGE_TAG'
+                    
+                    sh 'docker build -t $IOT_IMAGE:$IMAGE_TAG ./services/iot-service'
+                    sh 'docker push $IOT_IMAGE:$IMAGE_TAG'
+
+                    sh 'docker build -t $CHAT_IMAGE:$IMAGE_TAG ./services/chat-service'
+                    sh 'docker push $CHAT_IMAGE:$IMAGE_TAG'
+
+                    sh 'docker build -t $BOT_IMAGE:$IMAGE_TAG ./Medical-ChatBot-main'
+                    sh 'docker push $BOT_IMAGE:$IMAGE_TAG'
+
+                    sh 'docker build -t $FRONT_IMAGE:$IMAGE_TAG -f ./frontend/Dockerfile.microservices ./frontend'
+                    sh 'docker push $FRONT_IMAGE:$IMAGE_TAG'
+
+                    sh 'docker build -t $GATEWAY_IMAGE:$IMAGE_TAG ./nginx'
+                    sh 'docker push $GATEWAY_IMAGE:$IMAGE_TAG'
+                }
             }
         }
 
-        stage('Build & Push Core Service') {
+        // --- مرحلة الـ Deploy الفعلية على الـ EC2 ---
+        stage('Deploy to EC2') {
             steps {
-                sh 'docker build -t $CORE_IMAGE:$IMAGE_TAG ./services/core-service'
-                sh 'docker push $CORE_IMAGE:$IMAGE_TAG'
-            }
-        }
-
-        stage('Build & Push IoT Service') {
-            steps {
-                sh 'docker build -t $IOT_IMAGE:$IMAGE_TAG ./services/iot-service'
-                sh 'docker push $IOT_IMAGE:$IMAGE_TAG'
-            }
-        }
-
-        stage('Build & Push Chat Service') {
-            steps {
-                sh 'docker build -t $CHAT_IMAGE:$IMAGE_TAG ./services/chat-service'
-                sh 'docker push $CHAT_IMAGE:$IMAGE_TAG'
-            }
-        }
-
-        stage('Build & Push Medical ChatBot') {
-            steps {
-                sh 'docker build -t $BOT_IMAGE:$IMAGE_TAG ./Medical-ChatBot-main'
-                sh 'docker push $BOT_IMAGE:$IMAGE_TAG'
-            }
-        }
-
-        stage('Build & Push Frontend') {
-            steps {
-                sh 'docker build -t $FRONT_IMAGE:$IMAGE_TAG -f ./frontend/Dockerfile.microservices ./frontend'
-                sh 'docker push $FRONT_IMAGE:$IMAGE_TAG'
-            }
-        }
-
-        stage('Build & Push Gateway') {
-            steps {
-                sh 'docker build -t $GATEWAY_IMAGE:$IMAGE_TAG ./nginx'
-                sh 'docker push $GATEWAY_IMAGE:$IMAGE_TAG'
+                // استخدام withCredentials لسحب كل الـ Keys اللي الـ Chatbot والـ Services محتاجينها
+                withCredentials([
+                    string(credentialsId: 'JWT_SECRET_KEY', variable: 'JWT_SECRET_KEY'),
+                    string(credentialsId: 'PINECONE_API_KEY', variable: 'PINECONE_API_KEY'),
+                    string(credentialsId: 'GOOGLE_API_KEY', variable: 'GOOGLE_API_KEY'),
+                    string(credentialsId: 'GEMINI_API_KEYS', variable: 'GEMINI_API_KEYS'),
+                    string(credentialsId: 'GROQ_API_KEY', variable: 'GROQ_API_KEY')
+                ]) {
+                    script {
+                        echo "🚀 Pulling new images and restarting containers..."
+                        // أمر الـ Compose مع تمرير كل المتغيرات للـ Environment
+                        sh '''
+                            docker compose -f docker-compose.prod.yml pull
+                            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+                        '''
+                        echo "✅ Deployment completed successfully!"
+                    }
+                }
             }
         }
     }
@@ -86,12 +90,14 @@ pipeline {
     post {
         always {
             sh 'docker logout || true'
+            // تنظيف الصور القديمة عشان مساحة الـ EC2 ماتخلصش
+            sh 'docker image prune -f'
         }
         success {
-            echo '✅ All images built and pushed successfully!'
+            echo '🎉 Smart Hospital System is UP and RUNNING!'
         }
         failure {
-            echo '❌ Pipeline failed. Check logs.'
+            echo '❌ Deployment failed. Check the logs.'
         }
     }
-} // نهاية الـ Pipeline
+}
