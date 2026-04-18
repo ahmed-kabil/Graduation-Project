@@ -62,7 +62,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
+stage('Deploy to EC2') {
             steps {
                 withCredentials([
                     string(credentialsId: 'JWT_SECRET_KEY', variable: 'JWT_SECRET_KEY'),
@@ -73,8 +73,8 @@ pipeline {
                 ]) {
                     script {
                         echo "🚀 Pulling new images and restarting containers..."
-                        // تم تغيير docker compose إلى docker-compose لحل مشكلة الـ Flags
-                        // وتم إضافة الـ Images كـ variables لضمان قراءتها داخل الـ shell
+                        
+                        // نستخدم دالة sh معرفة المسار الكامل أو نعتمد على أن docker compose (plugin) موجود
                         sh """
                             export JWT_SECRET_KEY='${JWT_SECRET_KEY}'
                             export PINECONE_API_KEY='${PINECONE_API_KEY}'
@@ -82,16 +82,11 @@ pipeline {
                             export GEMINI_API_KEYS='${GEMINI_API_KEYS}'
                             export GROQ_API_KEY='${GROQ_API_KEY}'
                             export IMAGE_TAG='${IMAGE_TAG}'
-                            export AUTH_IMAGE='${AUTH_IMAGE}'
-                            export CORE_IMAGE='${CORE_IMAGE}'
-                            export IOT_IMAGE='${IOT_IMAGE}'
-                            export CHAT_IMAGE='${CHAT_IMAGE}'
-                            export BOT_IMAGE='${BOT_IMAGE}'
-                            export FRONT_IMAGE='${FRONT_IMAGE}'
-                            export GATEWAY_IMAGE='${GATEWAY_IMAGE}'
-
-                            docker-compose -f docker-compose.prod.yml pull
-                            docker-compose -f docker-compose.prod.yml up -d --remove-orphans
+                            
+                            # نستخدم docker compose (بدون داش) لأنه هو اللي اشتغل معاك في الترمينال
+                            # ونضيف ./ قبل الملف لضمان الوصول لمسار الملف في الـ workspace
+                            docker compose -f ./docker-compose.prod.yml pull
+                            docker compose -f ./docker-compose.prod.yml up -d --remove-orphans
                         """
                         echo "✅ Deployment completed successfully!"
                     }
