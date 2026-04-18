@@ -72,9 +72,7 @@ stage('Deploy to EC2') {
                     string(credentialsId: 'GROQ_API_KEY', variable: 'GROQ_API_KEY')
                 ]) {
                     script {
-                        echo "🚀 Pulling new images and restarting containers..."
-                        
-                        // نستخدم دالة sh معرفة المسار الكامل أو نعتمد على أن docker compose (plugin) موجود
+                        echo "🚀 Forces Deployment using absolute path..."
                         sh """
                             export JWT_SECRET_KEY='${JWT_SECRET_KEY}'
                             export PINECONE_API_KEY='${PINECONE_API_KEY}'
@@ -82,11 +80,10 @@ stage('Deploy to EC2') {
                             export GEMINI_API_KEYS='${GEMINI_API_KEYS}'
                             export GROQ_API_KEY='${GROQ_API_KEY}'
                             export IMAGE_TAG='${IMAGE_TAG}'
-                            
-                            # نستخدم docker compose (بدون داش) لأنه هو اللي اشتغل معاك في الترمينال
-                            # ونضيف ./ قبل الملف لضمان الوصول لمسار الملف في الـ workspace
-                            docker compose -f ./docker-compose.prod.yml pull
-                            docker compose -f ./docker-compose.prod.yml up -d --remove-orphans
+
+                            # استخدام المسار الكامل اللي نزلنا فيه الملف يدوياً
+                            /usr/local/bin/docker-compose --file ./docker-compose.prod.yml pull
+                            /usr/local/bin/docker-compose --file ./docker-compose.prod.yml up -d --remove-orphans
                         """
                         echo "✅ Deployment completed successfully!"
                     }
