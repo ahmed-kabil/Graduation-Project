@@ -15,7 +15,7 @@ pipeline {
         FRONT_IMAGE   = "${DOCKER_HUB_USERNAME}/hospital-frontend"
         GATEWAY_IMAGE = "${DOCKER_HUB_USERNAME}/hospital-gateway"
 
-        // تعريف الـ Credentials IDs اللي إنت مخزنها في Jenkins
+        // تعريف الـ Credentials IDs
         DOCKER_CREDS_ID = 'dockerhub-creds'
     }
 
@@ -34,10 +34,10 @@ pipeline {
             }
         }
 
-        // --- مرحلة بناء الصور ورفعها (نفس اللي عملتها قبل كدة) ---
         stage('Build & Push Services') {
             steps {
                 script {
+                    // بناء ورفع الصور
                     sh 'docker build -t $AUTH_IMAGE:$IMAGE_TAG ./services/auth-service'
                     sh 'docker push $AUTH_IMAGE:$IMAGE_TAG'
                     
@@ -62,10 +62,8 @@ pipeline {
             }
         }
 
-        // --- مرحلة الـ Deploy الفعلية على الـ EC2 ---
         stage('Deploy to EC2') {
             steps {
-                // استخدام withCredentials لسحب كل الـ Keys اللي الـ Chatbot والـ Services محتاجينها
                 withCredentials([
                     string(credentialsId: 'JWT_SECRET_KEY', variable: 'JWT_SECRET_KEY'),
                     string(credentialsId: 'PINECONE_API_KEY', variable: 'PINECONE_API_KEY'),
@@ -75,11 +73,26 @@ pipeline {
                 ]) {
                     script {
                         echo "🚀 Pulling new images and restarting containers..."
-                        // أمر الـ Compose مع تمرير كل المتغيرات للـ Environment
-                        sh '''
-                            docker compose -f docker-compose.prod.yml pull
-                            docker compose -f docker-compose.prod.yml up -d --remove-orphans
-                        '''
+                        // تم تغيير docker compose إلى docker-compose لحل مشكلة الـ Flags
+                        // وتم إضافة الـ Images كـ variables لضمان قراءتها داخل الـ shell
+                        sh """
+                            export JWT_SECRET_KEY='${JWT_SECRET_KEY}'
+                            export PINECONE_API_KEY='${PINECONE_API_KEY}'
+                            export GOOGLE_API_KEY='${GOOGLE_API_KEY}'
+                            export GEMINI_API_KEYS='${GEMINI_API_KEYS}'
+                            export GROQ_API_KEY='${GROQ_API_KEY}'
+                            export IMAGE_TAG='${IMAGE_TAG}'
+                            export AUTH_IMAGE='${AUTH_IMAGE}'
+                            export CORE_IMAGE='${CORE_IMAGE}'
+                            export IOT_IMAGE='${IOT_IMAGE}'
+                            export CHAT_IMAGE='${CHAT_IMAGE}'
+                            export BOT_IMAGE='${BOT_IMAGE}'
+                            export FRONT_IMAGE='${FRONT_IMAGE}'
+                            export GATEWAY_IMAGE='${GATEWAY_IMAGE}'
+
+                            docker-compose -f docker-compose.prod.yml pull
+                            docker-compose -f docker-compose.prod.yml up -d --remove-orphans
+                        """
                         echo "✅ Deployment completed successfully!"
                     }
                 }
@@ -90,7 +103,6 @@ pipeline {
     post {
         always {
             sh 'docker logout || true'
-            // تنظيف الصور القديمة عشان مساحة الـ EC2 ماتخلصش
             sh 'docker image prune -f'
         }
         success {
