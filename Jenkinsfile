@@ -37,7 +37,7 @@ pipeline {
         stage('Build & Push Services') {
             steps {
                 script {
-                    // بناء ورفع الصور
+                    // بناء ورفع الصور لكل الخدمات
                     sh 'docker build -t $AUTH_IMAGE:$IMAGE_TAG ./services/auth-service'
                     sh 'docker push $AUTH_IMAGE:$IMAGE_TAG'
                     
@@ -62,7 +62,7 @@ pipeline {
             }
         }
 
-stage('Deploy to EC2') {
+        stage('Deploy to EC2') {
             steps {
                 withCredentials([
                     string(credentialsId: 'JWT_SECRET_KEY', variable: 'JWT_SECRET_KEY'),
@@ -72,7 +72,7 @@ stage('Deploy to EC2') {
                     string(credentialsId: 'GROQ_API_KEY', variable: 'GROQ_API_KEY')
                 ]) {
                     script {
-                        echo "🚀 Forces Deployment using absolute path..."
+                        echo "🚀 Forces Deployment using Standalone Docker-Compose..."
                         sh """
                             export JWT_SECRET_KEY='${JWT_SECRET_KEY}'
                             export PINECONE_API_KEY='${PINECONE_API_KEY}'
@@ -81,7 +81,7 @@ stage('Deploy to EC2') {
                             export GROQ_API_KEY='${GROQ_API_KEY}'
                             export IMAGE_TAG='${IMAGE_TAG}'
 
-                            # استخدام المسار الكامل اللي نزلنا فيه الملف يدوياً
+                            # استدعاء مباشر للمسار اللي سطبناه لضمان عدم حدوث تعارض flags
                             /usr/local/bin/docker-compose --file ./docker-compose.prod.yml pull
                             /usr/local/bin/docker-compose --file ./docker-compose.prod.yml up -d --remove-orphans
                         """
@@ -95,6 +95,7 @@ stage('Deploy to EC2') {
     post {
         always {
             sh 'docker logout || true'
+            // مسح الصور القديمة لتوفير مساحة على الـ EC2
             sh 'docker image prune -f'
         }
         success {
