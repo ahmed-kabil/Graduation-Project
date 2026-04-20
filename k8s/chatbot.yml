@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: chatbot-dep
+  namespace: hospital-ns
+  labels:
+    app: chatbot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chatbot
+  template:
+    metadata:
+      name: chatbot-pod
+      labels:
+        app: chatbot
+    spec:
+      containers:
+        - name: chatbot-cont
+          image: monabawi/hospital-medical-chatbot:latest
+          ports:
+            - containerPort: 9090
+          env:
+            - name: PINECONE_API_KEY
+              valueFrom:
+                SecretKeyRef:
+                  name: hospital-secret
+                  key: pinecone-api-key
+
+            - name: GOOGLE_API_KEY
+              valueFrom:
+                SecretKeyRef:
+                  name: hospital-secret
+                  key: google-api-key
+
+            - name: GEMINI_API_KEYS
+              valueFrom:
+                SecretKeyRef:
+                  name: hospital-secret
+                  key: gemini-api-keys
+
+            - name: GROQ_API_KEY
+              valueFrom:
+                SecretKeyRef:
+                  name: hospital-secret
+                  key: groq-api-key
+            
+            - name: FORCE_REINDEX
+              valueFrom:
+                SecretKeyRef:
+                  name: hospital-secret
+                  key: force-reindex            
+---
+apiVersion: v1 
+kind: Service
+metadata:
+  name: chatbot-srv 
+  namespace: hospital-ns
+spec:
+  selector:
+    app: chatbot
+  ports:
+    - port: 9090
+      targetPort: 9090
+  type: ClusterIP

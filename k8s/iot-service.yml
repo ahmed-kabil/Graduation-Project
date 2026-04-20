@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: iot-service-dep
+  namespace: hospital-ns
+  labels:
+    app: iot-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: iot-service
+  template:
+    metadata:
+      name: iot-service-pod
+      labels:
+        app: iot-service
+    spec:
+      containers:
+        - name: iot-service-cont
+          image: ebrahimmohammed/hospital-iot-service:latest
+          ports:
+            - containerPort: 4003
+          env:
+            - name: PORT
+              value: 4003
+            - name: DATABASE_URL
+              valueFrom:
+                ConfigMapKeyRef:
+                  name: hospital-configMap
+                  key: database-url
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                SecretKeyRef:
+                  name: hospital-secret
+                  key: jwt-secret-key
+---
+apiVersion: v1 
+kind: Service
+metadata:
+  name: iot-service-srv 
+  namespace: hospital-ns
+spec:
+  selector:
+    app: iot-service
+  ports:
+    - port: 4003
+      targetPort: 4003
+  type: ClusterIP
