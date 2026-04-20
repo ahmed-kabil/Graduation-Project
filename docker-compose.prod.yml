@@ -1,16 +1,10 @@
 # ============================================
-# Smart Hospital System - Production Deployment
-# 8 Containers: Nginx, Frontend, Auth, Core, IoT, Chat, Medical-ChatBot, MongoDB
-# Docker Hub: monabawi/*
+# Smart Hospital System - Production Deployment (Modified for Jenkins)
 # ============================================
 
 services:
-
-  # ==========================================
-  # Container 1: API Gateway (Nginx)
-  # ==========================================
   nginx:
-    image: monabawi/hospital-gateway:v10.0
+    image: ${GATEWAY_IMAGE}:${IMAGE_TAG}
     container_name: hospital-gateway
     ports:
       - "80:80"
@@ -26,15 +20,8 @@ services:
       - hospital-network
     restart: always
 
-  # ==========================================
-  # Container 2: Frontend (React + Vite)
-  # ==========================================
   frontend:
-    image: monabawi/hospital-frontend:v10.0
-    # To rebuild locally with production URLs, uncomment below and comment out image:
-    # build:
-    #   context: ./frontend
-    #   dockerfile: Dockerfile.prod
+    image: ${FRONT_IMAGE}:${IMAGE_TAG}
     container_name: hospital-frontend
     expose:
       - "80"
@@ -42,12 +29,8 @@ services:
       - hospital-network
     restart: always
 
-  # ==========================================
-  # Container 3: Auth Service (Node.js)
-  # Handles: Login, Registration, Token Verification
-  # ==========================================
   auth-service:
-    image: monabawi/hospital-auth-service:v10.0
+    image: ${AUTH_IMAGE}:${IMAGE_TAG}
     container_name: hospital-auth-service
     expose:
       - "4001"
@@ -61,12 +44,8 @@ services:
       - hospital-network
     restart: always
 
-  # ==========================================
-  # Container 4: Core Service (Node.js)
-  # Handles: Staff CRUD, Patients CRUD, Doctor-specific endpoints
-  # ==========================================
   core-service:
-    image: monabawi/hospital-core-service:v10.0
+    image: ${CORE_IMAGE}:${IMAGE_TAG}
     container_name: hospital-core-service
     expose:
       - "4002"
@@ -82,12 +61,8 @@ services:
       - hospital-network
     restart: always
 
-  # ==========================================
-  # Container 5: IoT Service (Node.js)
-  # Handles: Sensor Readings from Medical Devices
-  # ==========================================
   iot-service:
-    image: monabawi/hospital-iot-service:v10.0
+    image: ${IOT_IMAGE}:${IMAGE_TAG}
     container_name: hospital-iot-service
     expose:
       - "4003"
@@ -101,12 +76,8 @@ services:
       - hospital-network
     restart: always
 
-  # ==========================================
-  # Container 6: Chat Service (Node.js + Socket.io)
-  # Handles: Real-time Messaging, Conversations
-  # ==========================================
   chat-service:
-    image: monabawi/hospital-chat-service:v10.0
+    image: ${CHAT_IMAGE}:${IMAGE_TAG}
     container_name: hospital-chat-service
     expose:
       - "4004"
@@ -120,12 +91,8 @@ services:
       - hospital-network
     restart: always
 
-  # ==========================================
-  # Container 7: Medical ChatBot Service (Python Flask + LangChain)
-  # Handles: RAG-based Medical Assistant using Pinecone & Groq
-  # ==========================================
   medical-chatbot:
-    image: monabawi/hospital-medical-chatbot:v10.0
+    image: ${BOT_IMAGE}:${IMAGE_TAG}
     container_name: hospital-medical-chatbot
     expose:
       - "9090"
@@ -139,9 +106,6 @@ services:
       - hospital-network
     restart: always
 
-  # ==========================================
-  # Container 8: Database (MongoDB)
-  # ==========================================
   mongo:
     image: mongo:7
     container_name: hospital-mongodb
@@ -153,16 +117,10 @@ services:
       - hospital-network
     restart: always
 
-# ==========================================
-# Shared Network
-# ==========================================
 networks:
   hospital-network:
     driver: bridge
 
-# ==========================================
-# Volumes
-# ==========================================
 volumes:
   mongo_data:
     driver: local
