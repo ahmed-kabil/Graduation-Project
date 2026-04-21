@@ -18,7 +18,8 @@ spec:
     spec:
       containers:
         - name: chat-service-cont
-          image: ebrahimmohammed/hospital-chat-service:latest
+          image: ahmedkabil/hospital-chat-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4004
           env:

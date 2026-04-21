@@ -18,7 +18,8 @@ spec:
     spec:
       containers:
         - name: auth-service-cont
-          image: ebrahimmohammed/hospital-auth-service:latest
+          image: ahmedkabil/hospital-auth-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4001
           env:

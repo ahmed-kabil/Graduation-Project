@@ -18,7 +18,8 @@ spec:
     spec:
       containers:
         - name: core-service-cont
-          image: ebrahimmohammed/hospital-core-service:latest
+          image: ahmedkabil/hospital-core-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4002
           env:

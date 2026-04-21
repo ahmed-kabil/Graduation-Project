@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: chatbot-cont
-          image: monabawi/hospital-medical-chatbot:v11.0
+          image: ahmedkabil/hospital-chatbot:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9090

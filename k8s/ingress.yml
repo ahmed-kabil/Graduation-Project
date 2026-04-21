@@ -69,14 +69,7 @@ spec:
                 name: core-service-srv
                 port:
                   number: 4002
-#  ======================================
-          - path: /api/appointments
-            pathType: Prefix
-            backend:
-              service:
-                name: core-service-srv
-                port:
-                  number: 4002
+
 #  ======================================
           - path: /api/readings
             pathType: Prefix
@@ -102,6 +95,14 @@ spec:
                 port:
                   number: 4004
 #  ======================================
+          - path: /api/appointments
+            pathType: Prefix
+            backend:
+              service:
+                name: chat-service-srv
+                port:
+                  number: 4004
+#  ======================================
           - path: /socket.io
             pathType: Prefix
             backend:
@@ -110,7 +111,7 @@ spec:
                 port:
                   number: 4004
 #  ======================================
-          - path: /api/chatbot(.*)
+          - path: /api/chatbot/
             pathType: Prefix
             backend:
               service:

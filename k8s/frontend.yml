@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: frontend-cont
-          image: hospital-frontend-image:latest
+          image: ahmedkabil/hospital-frontend:v1   # v1 contain ahmed domain  v2: contain nabawi domain
           ports:
             - containerPort: 80
 ---

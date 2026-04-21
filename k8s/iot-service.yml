@@ -18,7 +18,8 @@ spec:
     spec:
       containers:
         - name: iot-service-cont
-          image: ebrahimmohammed/hospital-iot-service:latest
+          image: ahmedkabil/hospital-iot-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4003
           env:
