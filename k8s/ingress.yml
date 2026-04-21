@@ -111,7 +111,7 @@ spec:
                 port:
                   number: 4004
 #  ======================================
-          - path: /api/chatbot/
+          - path: /api/chatbot
             pathType: Prefix
             backend:
               service:
