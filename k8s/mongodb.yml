@@ -3,26 +3,16 @@ kind: StatefulSet
 metadata: 
   name: mongodb-sfs 
   namespace: hospital-ns
-  app: mongodb
+  labels:
+    app: mongodb
 spec:
-  ServiceName: mongodb-headless-srv
+  serviceName: mongodb-headless-srv
   replicas: 3
   selector:
     matchLabels:
       app: mongodb
-  volumeClaimTemplates:
-    metadata:
-      name: mongodb-pvc
-    spec:
-      storageClassName: hospital-local-path
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: 2Gi
   template:
     metadata:
-      name: mongodb-pod 
       labels: 
         app: mongodb
     spec:
@@ -35,7 +25,16 @@ spec:
           ports:
             - containerPort: 27017
           args: ["--replSet", "rs0", "--bind_ip_all"]
-
+  volumeClaimTemplates:
+    - metadata:
+        name: mongodb-pvc
+      spec:
+        storageClassName: hospital-local-path
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
 ---
 apiVersion: v1
 kind: Service 
@@ -43,11 +42,10 @@ metadata:
   name: mongodb-headless-srv
   namespace: hospital-ns
 spec:
-  ClusterIP: None
+  clusterIP: None
   selector:
     app: mongodb
   ports:
   - protocol: TCP
     port: 27017
     targetPort: 27017
-  type: ClusterIP

@@ -23,15 +23,15 @@ spec:
             - containerPort: 4001
           env:
             - name: PORT
-              value: 4001
+              value: "4001"
             - name: DATABASE_URL
               valueFrom:
-                ConfigMapKeyRef:
-                  name: hospital-configMap
+                configMapKeyRef:
+                  name: hospital-configmap
                   key: database-url
             - name: JWT_SECRET_KEY
               valueFrom:
-                SecretKeyRef:
+                secretKeyRef:
                   name: hospital-secret
                   key: jwt-secret-key
 ---

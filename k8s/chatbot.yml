@@ -13,6 +13,7 @@ spec:
   template:
     metadata:
       name: chatbot-pod
+      # Removed 'name' as it's handled by the Deployment controller
       labels:
         app: chatbot
     spec:
@@ -24,31 +25,31 @@ spec:
           env:
             - name: PINECONE_API_KEY
               valueFrom:
-                SecretKeyRef:
+                secretKeyRef: # FIXED: lowercase 's'
                   name: hospital-secret
                   key: pinecone-api-key
 
             - name: GOOGLE_API_KEY
               valueFrom:
-                SecretKeyRef:
+                secretKeyRef: # FIXED: lowercase 's'
                   name: hospital-secret
                   key: google-api-key
 
             - name: GEMINI_API_KEYS
               valueFrom:
-                SecretKeyRef:
+                secretKeyRef: # FIXED: lowercase 's'
                   name: hospital-secret
                   key: gemini-api-keys
 
             - name: GROQ_API_KEY
               valueFrom:
-                SecretKeyRef:
+                secretKeyRef: # FIXED: lowercase 's'
                   name: hospital-secret
                   key: groq-api-key
             
             - name: FORCE_REINDEX
               valueFrom:
-                SecretKeyRef:
+                secretKeyRef: # FIXED: lowercase 's'
                   name: hospital-secret
                   key: force-reindex            
 ---
