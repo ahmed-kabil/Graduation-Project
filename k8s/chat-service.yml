@@ -30,6 +30,11 @@ spec:
                 configMapKeyRef:
                   name: hospital-configmap
                   key: database-url
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: hospital-configmap
+                  key: redis-url                 
             - name: JWT_SECRET_KEY
               valueFrom:
                 secretKeyRef:

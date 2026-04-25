@@ -1,12 +1,14 @@
 {
-  "name": "auth-service",
+  "name": "backend",
   "version": "1.0.0",
-  "description": "Authentication microservice for Smart Hospital System",
+  "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon app.js"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -14,6 +16,8 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
+    "nanoid": "^5.1.6",
+    "socket.io": "^4.8.1",
     "validator": "^13.15.20"
   },
   "devDependencies": {

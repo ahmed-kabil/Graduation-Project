@@ -11,9 +11,9 @@ metadata:
     nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization"
     nginx.ingress.kubernetes.io/cors-max-age: "86400"
 
-    # Rewrite
-    #nginx.ingress.kubernetes.io/rewrite-target: /get$1
-      # nginx.ingress.kubernetes.io/use-regex: "true"
+   # session affinity
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
 
     # Timeouts
     # nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
@@ -110,6 +110,14 @@ spec:
                 name: chat-service-srv
                 port:
                   number: 4004
+#  ======================================
+          - path: /api/metrics
+            pathType: Prefix
+            backend:
+              service:
+                name: metric-servo-service-srv
+                port:
+                  number: 4005
 #  ======================================
           - path: /api/chatbot
             pathType: Prefix

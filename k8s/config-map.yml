@@ -5,3 +5,4 @@ metadata:
   namespace: hospital-ns
 data:
   database-url: "mongodb://mongodb-sfs-0.mongodb-headless-srv:27017,mongodb-sfs-1.mongodb-headless-srv:27017,mongodb-sfs-2.mongodb-headless-srv:27017/hospital_db?replicaSet=rs0&readPreference=secondaryPreferred"
+  redis-url: "redis://redis-srv:6379"

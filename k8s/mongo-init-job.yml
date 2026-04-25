@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: restart-mongodb-sfs
+  namespace: hospital-ns
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: restarter
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Scaling down MongoDB..."
+          kubectl scale statefulset mongodb-sfs --replicas=0 -n hospital-ns
+
+          echo "Waiting for pods to terminate..."
+          sleep 4
+
+          echo "Scaling up MongoDB..."
+          kubectl scale statefulset mongodb-sfs --replicas=3 -n hospital-ns
+
+          echo "Waiting for pods to be ready..."
+          kubectl wait --for=condition=ready pod -l app=mongodb -n hospital-ns --timeout=180s
+
+          echo "Done"

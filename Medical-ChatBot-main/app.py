@@ -88,7 +88,7 @@ rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 def index():
     return render_template('chat.html')
 
-@app.route("/get", methods=["GET", "POST"])
+@app.route("/api/chatbot", methods=["GET", "POST"])
 def chat():
     # Accept both JSON and form-encoded data (JSON needed for Capacitor mobile app)
     if request.is_json:
