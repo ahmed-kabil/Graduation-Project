@@ -61,11 +61,11 @@ const StaffForm: React.FC<{ onSave: () => void; }> = ({ onSave }) => {
         }
     };
 
-    const inputClasses = "mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500";
+    const inputClasses = "mt-1 block w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40";
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Add New Staff Member</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-6">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Add New Staff Member</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Staff ID</label><input type="text" name="id" value={formData.id} onChange={handleChange} className={inputClasses} required /></div>
@@ -76,7 +76,7 @@ const StaffForm: React.FC<{ onSave: () => void; }> = ({ onSave }) => {
                     <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Role</label><select name="role" value={formData.role} onChange={handleChange} className={inputClasses} required><option value={Role.Doctor}>Doctor</option><option value={Role.Nurse}>Nurse</option><option value={Role.Receptionist}>Receptionist</option></select></div>
                 </div>
                 <div className="pt-2 flex justify-end">
-                    <button type="submit" disabled={isLoading} className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400">
+                    <button type="submit" disabled={isLoading} className="flex items-center px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-50 transition-all">
                         <AddIcon/> {isLoading ? 'Adding...' : 'Add Staff'}
                     </button>
                 </div>
@@ -139,11 +139,11 @@ const EditStaffModal: React.FC<{
         }
     };
 
-    const inputClasses = "mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500";
+    const inputClasses = "mt-1 block w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40";
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="edit-staff-title">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md transform transition-all animate-fade-in-scale">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="edit-staff-title">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-slate-700/50 transform transition-all animate-fade-in-scale">
                 <style>{`
                     @keyframes fade-in-scale {
                         from { transform: scale(0.95); opacity: 0; }
@@ -179,11 +179,11 @@ const EditStaffModal: React.FC<{
                             </div>
                         </div>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">
+                    <div className="bg-slate-50/80 dark:bg-slate-700/50 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                             Cancel
                         </button>
-                        <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400">
+                        <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-50 transition-all">
                             {isLoading ? 'Saving...' : 'Save Changes'}
                         </button>
                     </div>
@@ -246,11 +246,11 @@ export const AdminDashboard: React.FC = () => {
         onEdit: (staffMember: Doctor | Nurse | Receptionist) => void;
         onDelete: (staffMember: Doctor | Nurse | Receptionist) => void;
     }> = ({ title, staff, onEdit, onDelete }) => (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">{title}</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-6">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">{title}</h3>
             <ul className="space-y-2">
                 {staff.map(member => (
-                    <li key={member.id} className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-md flex justify-between items-center group">
+                    <li key={member.id} className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl flex justify-between items-center group border border-slate-100 dark:border-slate-700/50 hover:border-blue-200 dark:hover:border-blue-800/50 transition-colors">
                         <div>
                             <p className="font-medium text-slate-800 dark:text-white">{member.name}</p>
                             <p className="text-sm text-slate-500 dark:text-slate-400">{member.email}</p>
@@ -305,12 +305,12 @@ export const AdminDashboard: React.FC = () => {
             {renderContent()}
             {staffToDelete && (
                 <div 
-                    className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                     aria-labelledby="delete-staff-title"
                     role="dialog"
                     aria-modal="true"
                 >
-                  <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-sm transform transition-all animate-fade-in-scale">
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-sm border border-slate-100 dark:border-slate-700/50 transform transition-all animate-fade-in-scale">
                     <style>{`
                         @keyframes fade-in-scale {
                             from { transform: scale(0.95); opacity: 0; }
@@ -324,18 +324,18 @@ export const AdminDashboard: React.FC = () => {
                             Are you sure you want to remove <strong>{staffToDelete.name}</strong> from the system? This action cannot be undone.
                         </p>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
+                    <div className="bg-slate-50/80 dark:bg-slate-700/50 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
                         <button
                             type="button"
                             onClick={handleCancelDelete}
-                            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="button"
                             onClick={handleConfirmDelete}
-                            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors"
                         >
                             Delete
                         </button>

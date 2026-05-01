@@ -30,12 +30,20 @@ export interface SocketErrorMessage {
 /**
  * Socket Service for real-time messaging
  */
+export interface MessagesReadData {
+  conversation_id: string;
+  reader_id: string;
+}
+
 class SocketService {
   private socket: Socket | null = null;
   private docPatMessageHandlers: ((message: SocketMessage) => void)[] = [];
   private docNurMessageHandlers: ((message: SocketMessage) => void)[] = [];
+  private messagesReadHandlers: ((data: MessagesReadData) => void)[] = [];
   private errorHandlers: ((error: SocketErrorMessage) => void)[] = [];
   private connectListeners: (() => void)[] = [];
+  private joinedRooms: Set<string> = new Set();
+  private onlineUserId: string | null = null;
 
   /**
    * Initialize socket connection
@@ -63,8 +71,23 @@ class SocketService {
 
     this.socket.on('connect', () => {
       console.log('Socket connected:', this.socket?.id);
-      // Execute any pending connect listeners
-      this.connectListeners.forEach(listener => listener());
+
+      // Re-establish online status
+      if (this.onlineUserId && this.socket?.connected) {
+        this.socket.emit('online', this.onlineUserId);
+      }
+
+      // Re-join all previously joined rooms (critical for reconnection)
+      this.joinedRooms.forEach(room => {
+        if (this.socket?.connected) {
+          this.socket.emit('joinConversation', room);
+        }
+      });
+
+      // Execute any pending connect listeners then clear them
+      const pending = [...this.connectListeners];
+      this.connectListeners = [];
+      pending.forEach(listener => listener());
     });
 
     this.socket.on('disconnect', () => {
@@ -85,6 +108,11 @@ class SocketService {
       console.error('Socket error:', data);
       this.errorHandlers.forEach(handler => handler(data));
     });
+
+    this.socket.on('messagesRead', (data: MessagesReadData) => {
+      console.log('📩 Messages read event received:', data);
+      this.messagesReadHandlers.forEach(handler => handler(data));
+    });
   }
 
   /**
@@ -96,8 +124,11 @@ class SocketService {
       this.socket = null;
       this.docPatMessageHandlers = [];
       this.docNurMessageHandlers = [];
+      this.messagesReadHandlers = [];
       this.errorHandlers = [];
       this.connectListeners = [];
+      this.joinedRooms.clear();
+      this.onlineUserId = null;
     }
   }
 
@@ -116,6 +147,7 @@ class SocketService {
    * Emit "online" event to mark user as online
    */
   goOnline(userId: string): void {
+    this.onlineUserId = userId;
     this.whenConnected(() => {
       if (this.socket?.connected) {
         this.socket.emit('online', userId);
@@ -128,6 +160,7 @@ class SocketService {
    * Join a conversation room
    */
   joinConversation(conversationId: string): void {
+    this.joinedRooms.add(conversationId);
     this.whenConnected(() => {
       if (this.socket?.connected) {
         this.socket.emit('joinConversation', conversationId);
@@ -158,6 +191,31 @@ class SocketService {
     }
     this.socket.emit('sendDocNurMessage', data);
     console.log('Doc-Nur message sent:', data);
+  }
+
+  /**
+   * Emit a messagesRead event so the other party sees read receipts in real-time
+   */
+  emitMessagesRead(conversationId: string, readerId: string): void {
+    this.whenConnected(() => {
+      if (this.socket?.connected) {
+        this.socket.emit('messagesRead', { conversation_id: conversationId, reader_id: readerId });
+      }
+    });
+  }
+
+  /**
+   * Add a handler for messagesRead events
+   */
+  onMessagesRead(handler: (data: MessagesReadData) => void): void {
+    this.messagesReadHandlers.push(handler);
+  }
+
+  /**
+   * Remove a messagesRead handler
+   */
+  offMessagesRead(handler: (data: MessagesReadData) => void): void {
+    this.messagesReadHandlers = this.messagesReadHandlers.filter(h => h !== handler);
   }
 
   /**

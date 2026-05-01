@@ -27,7 +27,7 @@ export const ThemeToggle: React.FC = () => {
     return (
         <button
             onClick={toggleTheme}
-            className="fixed top-4 right-4 z-[100] p-2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors shadow-md flex items-center justify-center w-10 h-10 overflow-hidden"
+            className="fixed top-4 right-4 z-[100] p-2.5 rounded-xl bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 transition-all shadow-card border border-slate-100 dark:border-slate-600 flex items-center justify-center w-10 h-10 overflow-hidden"
             aria-label="Toggle theme"
         >
             <span className={`transition-transform duration-300 ease-in-out absolute ${theme === 'light' ? 'rotate-0 scale-100' : '-rotate-90 scale-0'}`}>

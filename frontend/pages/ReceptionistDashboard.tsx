@@ -69,11 +69,11 @@ const PatientFormModal: React.FC<{
 
     if (!isOpen) return null;
     
-    const inputClasses = "mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500";
+    const inputClasses = "mt-1 block w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40";
     
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg border border-slate-100 dark:border-slate-700/50">
                 <form onSubmit={handleSubmit}>
                     <div className="p-6">
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Add New Patient</h3>
@@ -98,9 +98,9 @@ const PatientFormModal: React.FC<{
                             <div className="md:col-span-2"><label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Assigned Doctor</label><select name="assignedDoctorId" value={formData.assignedDoctorId || ''} onChange={handleChange} className={inputClasses} required><option value="" disabled>Select a doctor</option>{doctors.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
                         </div>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-700/50 px-6 py-3 flex justify-end gap-3 rounded-b-lg">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">Cancel</button>
-                        <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400">{isLoading ? 'Saving...' : 'Save Patient'}</button>
+                    <div className="bg-slate-50/80 dark:bg-slate-700/50 px-6 py-3 flex justify-end gap-3 rounded-b-2xl">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+                        <button type="submit" disabled={isLoading} className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-50 transition-all">{isLoading ? 'Saving...' : 'Save Patient'}</button>
                     </div>
                 </form>
             </div>
@@ -203,7 +203,7 @@ export const ReceptionistDashboard: React.FC = () => {
     const goToNextPage = () => setCurrentPage((page) => Math.min(page + 1, totalPages));
     const goToPreviousPage = () => setCurrentPage((page) => Math.max(page - 1, 1));
     
-    const inputClasses = "w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500";
+    const inputClasses = "w-full px-2 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40";
 
     return (
         <>
@@ -213,10 +213,10 @@ export const ReceptionistDashboard: React.FC = () => {
                 ) : activeTab === 'Statistics' ? (
                     <ReceptionistStats />
                 ) : (
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md">
-                    <div className="p-4 sm:p-6 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-start sm:items-center border-b">
-                        <h3 className="text-lg sm:text-xl font-semibold text-slate-800 dark:text-white">Patient Records</h3>
-                        <button onClick={() => setIsAddModalOpen(true)} className="flex items-center px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 w-full sm:w-auto justify-center sm:justify-start">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50">
+                    <div className="p-4 sm:p-6 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-start sm:items-center border-b border-slate-100 dark:border-slate-700">
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Patient Records</h3>
+                        <button onClick={() => setIsAddModalOpen(true)} className="flex items-center px-4 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl hover:shadow-lg hover:shadow-blue-500/20 w-full sm:w-auto justify-center sm:justify-start transition-all">
                             <AddIcon />
                             Add New Patient
                         </button>
@@ -237,7 +237,7 @@ export const ReceptionistDashboard: React.FC = () => {
                             </thead>
                             <tbody>
                                 {currentPatients.map(p => (
-                                   <tr key={p._id} className={`border-b transition-colors duration-150 ${editingPatientId === p.id ? 'bg-sky-50 dark:bg-sky-900/30' : 'odd:bg-white dark:odd:bg-slate-800 even:bg-slate-50 dark:even:bg-slate-700/50 hover:bg-sky-100 dark:hover:bg-sky-900/30'}`}>
+                                   <tr key={p._id} className={`border-b border-slate-100 dark:border-slate-700 transition-colors duration-150 ${editingPatientId === p.id ? 'bg-blue-50 dark:bg-blue-900/20' : 'odd:bg-white dark:odd:bg-slate-800 even:bg-slate-50/50 dark:even:bg-slate-700/30 hover:bg-blue-50/50 dark:hover:bg-blue-900/10'}`}>
                                         {editingPatientId === p.id ? (
                                             <>
                                                 <td className="px-6 py-2 font-mono text-slate-700 dark:text-slate-300">{p.id}</td>
@@ -282,7 +282,7 @@ export const ReceptionistDashboard: React.FC = () => {
                         </table>
                     </div>
                     {totalPages > 1 && (
-                         <div className="p-4 border-t flex items-center justify-between">
+                         <div className="p-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
                             <span className="text-sm text-slate-600 dark:text-slate-400">
                                 Page {currentPage} of {totalPages}
                             </span>
@@ -290,14 +290,14 @@ export const ReceptionistDashboard: React.FC = () => {
                                 <button 
                                     onClick={goToPreviousPage} 
                                     disabled={currentPage === 1}
-                                    className="px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                 >
                                     Previous
                                 </button>
                                 <button 
                                     onClick={goToNextPage} 
                                     disabled={currentPage === totalPages}
-                                    className="px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                 >
                                     Next
                                 </button>
@@ -315,12 +315,12 @@ export const ReceptionistDashboard: React.FC = () => {
             />
              {patientToDelete && (
                 <div 
-                    className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                     aria-labelledby="delete-patient-title"
                     role="dialog"
                     aria-modal="true"
                 >
-                  <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-sm transform transition-all animate-fade-in-scale">
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-sm border border-slate-100 dark:border-slate-700/50 transform transition-all animate-fade-in-scale">
                     <style>{`
                         @keyframes fade-in-scale {
                             from { transform: scale(0.95); opacity: 0; }
@@ -342,19 +342,19 @@ export const ReceptionistDashboard: React.FC = () => {
                                 id="delete-confirm"
                                 value={deleteConfirmText}
                                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                className="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                                className="mt-1 block w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl text-sm shadow-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40"
                                 autoFocus
                             />
                         </div>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
+                    <div className="bg-slate-50/80 dark:bg-slate-700/50 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
                         <button
                             type="button"
                             onClick={() => {
                                 setPatientToDelete(null);
                                 setDeleteConfirmText('');
                             }}
-                            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                         >
                             Cancel
                         </button>
@@ -362,7 +362,7 @@ export const ReceptionistDashboard: React.FC = () => {
                             type="button"
                             onClick={handleDelete}
                             disabled={deleteConfirmText !== patientToDelete.name}
-                            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors"
+                            className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             Delete Patient
                         </button>

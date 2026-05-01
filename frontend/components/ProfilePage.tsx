@@ -46,11 +46,11 @@ const ProfileIcon = () => (
 
 const getRoleBadgeColor = (role?: Role) => {
     switch (role) {
-        case Role.Doctor: return 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300';
-        case Role.Nurse: return 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300';
-        case Role.Patient: return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300';
-        case Role.Receptionist: return 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300';
-        case Role.Admin: return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300';
+        case Role.Doctor: return 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300';
+        case Role.Nurse: return 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300';
+        case Role.Patient: return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300';
+        case Role.Receptionist: return 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300';
+        case Role.Admin: return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300';
         default: return 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
     }
 };
@@ -87,9 +87,9 @@ export const ProfilePage: React.FC = () => {
     return (
         <div className="max-w-2xl mx-auto space-y-6">
             {/* Profile Card */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 overflow-hidden">
                 {/* Header banner */}
-                <div className="h-28 bg-gradient-to-r from-blue-600 to-sky-500 dark:from-blue-800 dark:to-sky-700 relative">
+                <div className="h-28 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-700 dark:to-blue-800 relative">
                     <div className="absolute -bottom-10 left-6">
                         <div className="w-20 h-20 rounded-full bg-white dark:bg-slate-700 border-4 border-white dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-300 shadow-lg">
                             <ProfileIcon />
@@ -104,7 +104,7 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Profile Information */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-6">
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
@@ -146,7 +146,7 @@ export const ProfilePage: React.FC = () => {
             </div>
 
             {/* Theme Settings */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-card border border-slate-100 dark:border-slate-700/50 p-6">
                 <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -154,7 +154,7 @@ export const ProfilePage: React.FC = () => {
                     </svg>
                     Theme Settings
                 </h3>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
                     <div className="flex items-center gap-3">
                         <div className="text-amber-500 dark:text-slate-400">
                             <SunIcon />
