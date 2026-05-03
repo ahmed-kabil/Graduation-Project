@@ -1,0 +1,129 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hospital-ingress
+  namespace: hospital-ns
+  annotations:
+    # CORS
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization"
+    nginx.ingress.kubernetes.io/cors-max-age: "86400"
+
+   # session affinity
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+
+    # Timeouts
+    # nginx.ingress.kubernetes.io/proxy-connect-timeout: "120"
+    #nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    #nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+       - hospital.ahmedkabil.me
+      secretName: hospital-tls-secret
+  rules:
+    - host: hospital.ahmedkabil.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-srv
+                port:
+                  number: 80
+
+          - path: /api/login
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service-srv
+                port:
+                  number: 4001
+#  ======================================
+          - path: /api/staff
+            pathType: Prefix
+            backend:
+              service:
+                name: core-service-srv
+                port:
+                  number: 4002
+#  ======================================
+          - path: /api/patients
+            pathType: Prefix
+            backend:
+              service:
+                name: core-service-srv
+                port:
+                  number: 4002
+#  ======================================
+          - path: /api/other
+            pathType: Prefix
+            backend:
+              service:
+                name: core-service-srv
+                port:
+                  number: 4002
+
+#  ======================================
+          - path: /api/readings
+            pathType: Prefix
+            backend:
+              service:
+                name: iot-service-srv
+                port:
+                  number: 4003
+#  ======================================
+          - path: /api/conversations
+            pathType: Prefix
+            backend:
+              service:
+                name: chat-service-srv
+                port:
+                  number: 4004
+#  ======================================
+          - path: /api/messages
+            pathType: Prefix
+            backend:
+              service:
+                name: chat-service-srv
+                port:
+                  number: 4004
+#  ======================================
+          - path: /api/appointments
+            pathType: Prefix
+            backend:
+              service:
+                name: chat-service-srv
+                port:
+                  number: 4004
+#  ======================================
+          - path: /socket.io
+            pathType: Prefix
+            backend:
+              service:
+                name: chat-service-srv
+                port:
+                  number: 4004
+#  ======================================
+          - path: /api/metrics
+            pathType: Prefix
+            backend:
+              service:
+                name: metric-servo-service-srv
+                port:
+                  number: 4005
+#  ======================================
+          - path: /api/chatbot
+            pathType: Prefix
+            backend:
+              service:
+                name: chatbot-srv
+                port:
+                  number: 9090
+#  ======================================

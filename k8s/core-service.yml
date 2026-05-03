@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: core-service-dep
+  namespace: hospital-ns
+  labels:
+    app: core-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: core-service
+  template:
+    metadata:
+      name: core-service-pod
+      labels:
+        app: core-service
+    spec:
+      containers:
+        - name: core-service-cont
+          image: ahmedkabil/hospital-core-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4002
+          env:
+            - name: PORT
+              value: "4002"
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: hospital-configmap
+                  key: database-url
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hospital-secret
+                  key: jwt-secret-key
+---
+apiVersion: v1 
+kind: Service
+metadata:
+  name: core-service-srv 
+  namespace: hospital-ns
+spec:
+  selector:
+    app: core-service
+  ports:
+    - port: 4002
+      targetPort: 4002
+  type: ClusterIP
